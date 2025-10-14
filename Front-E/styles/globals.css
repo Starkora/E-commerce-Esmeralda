@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ⚠️ Esto no es necesario si ya estás usando @tailwind... pero si lo necesitas por compatibilidad temporal, mantenlo */
+@import "tailwindcss";
+
+/* 🎞️ Animaciones personalizadas */
+@layer utilities {
+  /* Marquee horizontal */
+  @keyframes marquee {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .marquee {
+    @apply inline-block whitespace-nowrap;
+    animation: marquee 20s linear infinite;
+  }
+
+  /* Fade-in hacia arriba */
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in {
+    animation: fadeIn 1.5s ease-in forwards;
+  }
+}
