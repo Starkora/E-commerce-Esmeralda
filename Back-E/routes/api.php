@@ -1,3 +1,12 @@
+// Exponer la ruta sanctum/csrf-cookie en el grupo api para CORS
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Http\Request;
+
+Route::get('/sanctum/csrf-cookie', function (Request $request) {
+    // Laravel ya gestiona el CSRF cookie, solo devolvemos una respuesta vacía
+    return response()->json(['csrf' => true]);
+});
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
