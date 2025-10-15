@@ -36,7 +36,7 @@ const RegisterSection: React.FC = () => {
             const axios = (await import('axios')).default;
 
             // Obtener cookie CSRF antes de registrar
-            await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+            await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
 
             // Leer el token CSRF de la cookie y decodificarlo (viene URL-encoded)
             const rawToken = getCookie('XSRF-TOKEN') || '';
@@ -44,7 +44,7 @@ const RegisterSection: React.FC = () => {
 
             // Enviar datos al backend incluyendo phone y password_confirmation
             await axios.post(
-                '/api/spa-register',
+                `${process.env.NEXT_PUBLIC_API_URL}/api/spa-register`,
                 {
                     name: nombre,
                     last_name: apellido,
