@@ -9,47 +9,6 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 class ForceCorsHeaders
 {
     /**
-     * Handle an incoming request.
-     */
-    public function handle(Request $request, Closure $next)
-    {
-        // If it's a preflight request, return an empty 204 with CORS headers
-        if ($request->isMethod('OPTIONS')) {
-            $resp = new SymfonyResponse('', 204);
-            return $this->addCorsHeaders($resp);
-        }
-
-        $response = $next($request);
-
-        return $this->addCorsHeaders($response);
-    }
-
-    protected function addCorsHeaders($response)
-    {
-        // Target origin - keep in sync with your frontend
-        $origin = 'https://e-commerce-esmeralda.vercel.app';
-
-        if (method_exists($response, 'header')) {
-            $response->header('Access-Control-Allow-Origin', $origin);
-            $response->header('Access-Control-Allow-Credentials', 'true');
-            $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-            $response->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, Authorization, X-XSRF-TOKEN');
-        }
-
-        return $response;
-    }
-}
-<?php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-
-class ForceCorsHeaders
-{
-    /**
      * Handle an incoming request and ensure CORS headers are present on the response.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -60,7 +19,7 @@ class ForceCorsHeaders
     {
         $origin = 'https://e-commerce-esmeralda.vercel.app';
 
-        // If OPTIONS preflight, respond immediately with the required headers
+        // Handle preflight requests immediately
         if (strtoupper($request->method()) === 'OPTIONS') {
             $headers = [
                 'Access-Control-Allow-Origin' => $origin,
@@ -75,11 +34,19 @@ class ForceCorsHeaders
         $response = $next($request);
 
         // Ensure headers exist on the response object
-        if ($response instanceof Response || method_exists($response, 'header')) {
-            $response->headers->set('Access-Control-Allow-Origin', $origin);
-            $response->headers->set('Access-Control-Allow-Credentials', 'true');
-            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+        if (method_exists($response, 'header') || isset($response->headers)) {
+            // Some response types expose header methods differently; use the headers property when possible
+            if (isset($response->headers) && method_exists($response->headers, 'set')) {
+                $response->headers->set('Access-Control-Allow-Origin', $origin);
+                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+                $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+            } else {
+                $response->header('Access-Control-Allow-Origin', $origin);
+                $response->header('Access-Control-Allow-Credentials', 'true');
+                $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+                $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+            }
         }
 
         return $response;
