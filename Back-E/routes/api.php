@@ -13,8 +13,10 @@ use Illuminate\Support\Facades\Response;
 
 
 Route::get('/sanctum/csrf-cookie', function (Request $request) {
-    // Laravel ya gestiona el CSRF cookie, solo devolvemos una respuesta vacía
-    return response()->json(['csrf' => true]);
+    // Solución alternativa: forzar headers CORS en la respuesta
+    return response()->json(['csrf' => true])
+        ->header('Access-Control-Allow-Origin', 'https://e-commerce-esmeralda.vercel.app')
+        ->header('Access-Control-Allow-Credentials', 'true');
 });
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
