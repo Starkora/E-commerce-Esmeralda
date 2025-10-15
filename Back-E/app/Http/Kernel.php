@@ -8,6 +8,7 @@ class Kernel extends HttpKernel
 {
     protected $middleware = [
         // Otros middlewares globales
+        \App\Http\Middleware\ForceCorsHeaders::class,
         \Illuminate\Http\Middleware\HandleCors::class,
     ];
 
@@ -29,6 +30,7 @@ class Kernel extends HttpKernel
             // Allow SPA first-party cookie authentication for API routes
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\ForceCorsHeaders::class,
         ],
     ];
 
