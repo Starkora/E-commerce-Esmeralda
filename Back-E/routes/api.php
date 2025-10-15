@@ -1,7 +1,16 @@
+
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
 // Exponer la ruta sanctum/csrf-cookie en el grupo api para CORS
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Http\Request;
+
 
 Route::get('/sanctum/csrf-cookie', function (Request $request) {
     // Laravel ya gestiona el CSRF cookie, solo devolvemos una respuesta vacía
@@ -46,11 +55,3 @@ Route::post('/spa-register', function (Illuminate\Http\Request $request) {
 
     return response()->json(['message' => 'Registro exitoso, revisa tu correo para verificar tu cuenta.']);
 });
-<?php
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
