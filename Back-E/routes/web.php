@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Auth\Events\Verified;
@@ -160,14 +161,22 @@ Route::post('/spa-register', function (Request $request) {
             'phone' => $input['phone'] ?? null,
         ]);
 
-        // Si el modelo ya usa cast 'password' => 'hashed', no vuelvas a hashear
-        $user = \App\Models\User::create([
+        // Arma los campos a insertar según existan en la tabla (producción puede no tener
+        // last_name/phone aún si no corriste migraciones)
+        $data = [
             'name' => $input['name'],
-            'last_name' => $input['last_name'] ?? '',
             'email' => $input['email'],
-            'phone' => $input['phone'] ?? null,
             'password' => $input['password'],
-        ]);
+        ];
+        if (Schema::hasColumn('users', 'last_name')) {
+            $data['last_name'] = $input['last_name'] ?? '';
+        }
+        if (Schema::hasColumn('users', 'phone')) {
+            $data['phone'] = $input['phone'] ?? null;
+        }
+
+        // Si el modelo ya usa cast 'password' => 'hashed', no vuelvas a hashear
+        $user = \App\Models\User::create($data);
 
         Auth::login($user);
 
