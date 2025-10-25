@@ -191,7 +191,7 @@ Route::post('/spa-register', function (Request $request) {
         ]);
         return response()->json([
             'message' => 'Error interno al registrar',
-            'error' => app()->hasDebugModeEnabled() ? $e->getMessage() : 'server_error',
+            'error' => config('app.debug') ? $e->getMessage() : 'server_error',
         ], 500);
     }
 })
