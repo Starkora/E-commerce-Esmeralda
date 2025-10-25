@@ -1,32 +1,20 @@
-
 <?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-// Exponer la ruta sanctum/csrf-cookie en el grupo api para CORS
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Response;
-
-
-Route::get('/sanctum/csrf-cookie', function (Request $request) {
-    // Solución alternativa: forzar headers CORS en la respuesta
-    return response()->json(['csrf' => true])
-        ->header('Access-Control-Allow-Origin', 'https://e-commerce-esmeralda.vercel.app')
-        ->header('Access-Control-Allow-Credentials', 'true');
-});
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
-// SPA-friendly registration endpoint que retorna JSON
-Route::post('/spa-register', function (Illuminate\Http\Request $request) {
-    $input = $request->all();
+// ✅ Obtener usuario autenticado (protegido por Sanctum)
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
 
-    $validator = \Illuminate\Support\Facades\Validator::make($input, [
+// ✅ Registro SPA-friendly
+Route::post('/spa-register', function (Request $request) {
+    $validator = Validator::make($request->all(), [
         'name' => ['required', 'string', 'max:255'],
         'last_name' => ['nullable', 'string', 'max:255'],
         'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
@@ -38,22 +26,19 @@ Route::post('/spa-register', function (Illuminate\Http\Request $request) {
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    Log::info('spa-register-payload', [
-        'name' => $input['name'] ?? null,
-        'last_name' => $input['last_name'] ?? null,
-        'email' => $input['email'] ?? null,
-        'phone' => $input['phone'] ?? null,
-    ]);
-
     $user = \App\Models\User::create([
-        'name' => $input['name'],
-        'last_name' => $input['last_name'] ?? '',
-        'email' => $input['email'],
-        'phone' => $input['phone'] ?? null,
-        'password' => Hash::make($input['password']),
+        'name' => $request->input('name'),
+        'last_name' => $request->input('last_name', ''),
+        'email' => $request->input('email'),
+        'phone' => $request->input('phone'),
+        'password' => Hash::make($request->input('password')),
     ]);
 
+    // Inicia sesión automáticamente
     Auth::login($user);
 
-    return response()->json(['message' => 'Registro exitoso, revisa tu correo para verificar tu cuenta.']);
+    return response()->json([
+        'message' => 'Registro exitoso, revisa tu correo para verificar tu cuenta.',
+        'user' => $user
+    ]);
 });

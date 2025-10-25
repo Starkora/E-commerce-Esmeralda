@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Str;
 
+// Normalize SameSite value from env to avoid case issues (expects: lax|strict|none|null)
+$__sameSite = env('SESSION_SAME_SITE', 'lax');
+if (is_string($__sameSite)) {
+    $__sameSite = strtolower($__sameSite);
+}
+
 return [
 
     /*
@@ -201,7 +207,7 @@ return [
     |
     */
 
-    'same_site' => env('SESSION_SAME_SITE', 'lax'),
+    'same_site' => $__sameSite,
 
     /*
     |--------------------------------------------------------------------------

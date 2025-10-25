@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { useRouter } from 'next/router';
 import Link from "next/link";
 import toast from 'react-hot-toast';
+import { getApiBaseUrl } from "@/utils/apiBaseUrl";
+const cors = require('cors');
+
 
 const RegisterSection: React.FC = () => {
     const [nombre, setNombre] = useState("");
@@ -34,9 +37,10 @@ const RegisterSection: React.FC = () => {
         setError("");
         try {
             const axios = (await import('axios')).default;
+            const apiBaseUrl = getApiBaseUrl();
 
             // Obtener cookie CSRF antes de registrar
-            await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
+            await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
 
             // Leer el token CSRF de la cookie y decodificarlo (viene URL-encoded)
             const rawToken = getCookie('XSRF-TOKEN') || '';
@@ -44,7 +48,7 @@ const RegisterSection: React.FC = () => {
 
             // Enviar datos al backend incluyendo phone y password_confirmation
             await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/spa-register`,
+                `${apiBaseUrl}/api/spa-register`,
                 {
                     name: nombre,
                     last_name: apellido,

@@ -15,10 +15,12 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://e-commerce-esmeralda.vercel.app'],
+    // Allow configuring origins via env. Comma-separated list, e.g. "https://foo.app,https://bar.app"
+    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', 'https://e-commerce-esmeralda.vercel.app')),
     'allowed_origin_patterns' => [],
 
     'allowed_headers' => ['*'],
 
+    // Required for Sanctum cookie-based auth across domains
     'supports_credentials' => true,
 ];
