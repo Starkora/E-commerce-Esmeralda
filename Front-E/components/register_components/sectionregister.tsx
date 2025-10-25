@@ -47,7 +47,7 @@ const RegisterSection: React.FC = () => {
 
             // Enviar datos al backend incluyendo phone y password_confirmation
             await axios.post(
-                `${apiBaseUrl}/api/spa-register`,
+                `${apiBaseUrl}/spa-register`,
                 {
                     name: nombre,
                     last_name: apellido,
