@@ -12,7 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        // Add any routes to exclude from CSRF verification during debugging if needed
-        // '/debug-csrf',
+        // TEMP: Evitar 419 mientras ajustamos cookies third‑party (CHIPS) en producción
+        // IMPORTANTE: quita esta excepción cuando confirmes que el POST ya envía la cookie de sesión
+        '/spa-register',
     ];
 }
