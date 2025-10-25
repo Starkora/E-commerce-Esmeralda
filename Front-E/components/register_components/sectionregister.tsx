@@ -38,12 +38,10 @@ const RegisterSection: React.FC = () => {
             const axios = (await import('axios')).default;
             const apiBaseUrl = getApiBaseUrl();
 
-            // Obtener cookie CSRF antes de registrar
+            // 1) Asegurar sesión y obtener token CSRF desde el backend (sin leer cookies cross-site)
             await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
-
-            // Leer el token CSRF de la cookie y decodificarlo (viene URL-encoded)
-            const rawToken = getCookie('XSRF-TOKEN') || '';
-            const csrfToken = rawToken ? decodeURIComponent(rawToken) : '';
+            const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
+            const csrfToken: string = csrfResp?.data?.csrf_token || '';
 
             // Enviar datos al backend incluyendo phone y password_confirmation
             await axios.post(
@@ -59,7 +57,8 @@ const RegisterSection: React.FC = () => {
                 {
                     withCredentials: true,
                     headers: {
-                        'X-XSRF-TOKEN': csrfToken || '',
+                        // Enviar token de sesión directo (evita leer cookie XSRF en dominio distinto)
+                        'X-CSRF-TOKEN': csrfToken || '',
                         'Accept': 'application/json',
                     },
                 }

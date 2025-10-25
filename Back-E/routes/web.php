@@ -214,6 +214,13 @@ Route::any('/debug-csrf', function (Request $request) {
     ]);
 });
 
+// Lightweight endpoint to retrieve the current CSRF token tied to the session cookie
+Route::get('/csrf-token', function (Request $request) {
+    return response()->json([
+        'csrf_token' => csrf_token(),
+    ]);
+});
+
 // Quick debug route to check whether the current request is authenticated
 Route::get('/debug-auth', function (Request $request) {
     return response()->json([
