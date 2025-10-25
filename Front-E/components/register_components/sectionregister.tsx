@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import Link from "next/link";
 import toast from 'react-hot-toast';
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
-const cors = require('cors');
 
 
 const RegisterSection: React.FC = () => {
