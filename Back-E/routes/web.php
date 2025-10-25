@@ -133,7 +133,11 @@ Route::middleware([
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
     return response()->json(['message' => 'Verification link sent.']);
-})->middleware(['auth:sanctum']);
+})->middleware(['auth:sanctum'])
+    ->withoutMiddleware([
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+    ]);
 
 // Public resend (rate-limited)
 Route::post('/email/verification-notification-public', function (Request $request) {
@@ -154,7 +158,11 @@ Route::post('/email/verification-notification-public', function (Request $reques
 
     $user->sendEmailVerificationNotification();
     return response()->json(['message' => 'Enlace de verificación enviado.']);
-})->middleware('throttle:6,1');
+})->middleware('throttle:6,1')
+  ->withoutMiddleware([
+      \App\Http\Middleware\VerifyCsrfToken::class,
+      \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+  ]);
 
 // Email verification redirect back to frontend
 Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
