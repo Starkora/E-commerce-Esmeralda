@@ -176,7 +176,20 @@ Route::post('/spa-register', function (Request $request) {
         }
 
         // Si el modelo ya usa cast 'password' => 'hashed', no vuelvas a hashear
-        $user = \App\Models\User::create($data);
+        try {
+            $user = \App\Models\User::create($data);
+        } catch (\Illuminate\Database\QueryException $qe) {
+            Log::error('spa-register-db-exception', [
+                'message' => $qe->getMessage(),
+                'sql_state' => $qe->getSql(),
+                'bindings' => $qe->getBindings(),
+            ]);
+            return response()->json([
+                'message' => 'Error de base de datos al crear el usuario',
+                'type' => 'db',
+                'error' => $qe->getMessage(),
+            ], 500);
+        }
 
         Auth::login($user);
 
@@ -200,7 +213,8 @@ Route::post('/spa-register', function (Request $request) {
         ]);
         return response()->json([
             'message' => 'Error interno al registrar',
-            'error' => config('app.debug') ? $e->getMessage() : 'server_error',
+            'type' => get_class($e),
+            'error' => $e->getMessage(),
         ], 500);
     }
 })
