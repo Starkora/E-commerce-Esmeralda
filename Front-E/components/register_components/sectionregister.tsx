@@ -47,6 +47,7 @@ const RegisterSection: React.FC = () => {
             await axios.post(
                 `${apiBaseUrl}/spa-register`,
                 {
+                    _token: csrfToken, // fallback: Laravel también acepta el token en el body
                     name: nombre,
                     last_name: apellido,
                     email,
@@ -59,7 +60,9 @@ const RegisterSection: React.FC = () => {
                     headers: {
                         // Enviar token de sesión directo (evita leer cookie XSRF en dominio distinto)
                         'X-CSRF-TOKEN': csrfToken || '',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
+                        'Content-Type': 'application/json',
                     },
                 }
             );
