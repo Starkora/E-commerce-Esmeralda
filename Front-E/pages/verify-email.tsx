@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 
 const VerifyEmailPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -11,14 +12,27 @@ const VerifyEmailPage: React.FC = () => {
     setMessage('');
     try {
       const axios = (await import('axios')).default;
-  await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+      const apiBaseUrl = getApiBaseUrl();
+      if (!apiBaseUrl) {
+        throw new Error('Falta configurar NEXT_PUBLIC_API_URL con la URL del backend');
+      }
+      // Obtener cookie CSRF y token desde el backend (cross-site)
+      await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
+      const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
+      const csrfToken: string = csrfResp.data?.csrf_token || '';
       // Intentar endpoint autenticado primero
       let res;
       try {
-  res = await axios.post('/email/verification-notification', {}, { withCredentials: true });
+        res = await axios.post(`${apiBaseUrl}/email/verification-notification`, {}, {
+          withCredentials: true,
+          headers: { 'X-CSRF-TOKEN': csrfToken },
+        });
       } catch (e) {
         // Si no está autenticado, usar endpoint público que recibe email
-  res = await axios.post('/email/verification-notification-public', { email }, { withCredentials: true });
+        res = await axios.post(`${apiBaseUrl}/email/verification-notification-public`, { email }, {
+          withCredentials: true,
+          headers: { 'X-CSRF-TOKEN': csrfToken },
+        });
       }
       const msg = res.data?.message || 'Se ha enviado el enlace de verificación.';
       setMessage(msg);

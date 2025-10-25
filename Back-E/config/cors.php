@@ -11,7 +11,8 @@ return [
         'csrf-token',
         'forgot-password',
         'reset-password',
-        'user'
+        'user',
+        'email/*'
     ],
 
     'allowed_methods' => ['*'],

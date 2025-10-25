@@ -36,6 +36,40 @@ Route::post('/spa-login', function (Request $request) {
     return response()->json(['message' => 'Login exitoso']);
 });
 
+// Debug puntual de correo (proteger con DEBUG_KEY). Úsalo solo temporalmente.
+Route::get('/debug-mail', function (Request $request) {
+    if ($request->query('key') !== env('DEBUG_KEY')) {
+        abort(403, 'forbidden');
+    }
+
+    $to = $request->query('to', env('MAIL_TEST_TO'));
+    try {
+        \Illuminate\Support\Facades\Mail::raw('Prueba de correo desde /debug-mail', function ($m) use ($to) {
+            $m->to($to)->subject('Prueba Laravel');
+        });
+
+        return response()->json([
+            'sent' => true,
+            'to' => $to,
+            'mailer' => config('mail.default'),
+            'from' => config('mail.from'),
+            'smtp' => [
+                'host' => config('mail.mailers.'.config('mail.default').'.host'),
+                'port' => config('mail.mailers.'.config('mail.default').'.port'),
+                'encryption' => config('mail.mailers.'.config('mail.default').'.encryption'),
+                'username' => (bool) config('mail.mailers.'.config('mail.default').'.username'),
+            ],
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'sent' => false,
+            'error' => $e->getMessage(),
+            'mailer' => config('mail.default'),
+            'from' => config('mail.from'),
+        ], 500);
+    }
+});
+
 // Endpoint para solicitar recuperación de contraseña (envía email con link personalizado)
 Route::post('/spa-forgot-password', function (Request $request) {
     $request->validate(['email' => 'required|email']);
@@ -135,7 +169,8 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) 
         event(new Verified($user));
     }
 
-    return redirect()->away('http://localhost:3000/?verified=1');
+    $frontUrl = rtrim(env('FORTIFY_URL', 'http://localhost:3000'), '/');
+    return redirect()->away($frontUrl.'/?verified=1');
 })->name('verification.verify');
 
 // SPA-friendly registration endpoint that returns JSON
