@@ -131,8 +131,20 @@ Route::middleware([
 
 // Authenticated resend verification (for logged-in users)
 Route::post('/email/verification-notification', function (Request $request) {
-    $request->user()->sendEmailVerificationNotification();
-    return response()->json(['message' => 'Verification link sent.']);
+    try {
+        $request->user()->sendEmailVerificationNotification();
+        return response()->json(['message' => 'Verification link sent.']);
+    } catch (\Throwable $e) {
+        Log::error('verification-send-auth-error', [
+            'message' => $e->getMessage(),
+            'from' => config('mail.from'),
+            'mailer' => config('mail.default'),
+        ]);
+        return response()->json([
+            'message' => 'No se pudo enviar el correo de verificación (auth).',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 })->middleware(['auth:sanctum'])
     ->withoutMiddleware([
             \App\Http\Middleware\VerifyCsrfToken::class,
@@ -156,8 +168,21 @@ Route::post('/email/verification-notification-public', function (Request $reques
         return response()->json(['message' => 'El correo ya está verificado.'], 400);
     }
 
-    $user->sendEmailVerificationNotification();
-    return response()->json(['message' => 'Enlace de verificación enviado.']);
+    try {
+        $user->sendEmailVerificationNotification();
+        return response()->json(['message' => 'Enlace de verificación enviado.']);
+    } catch (\Throwable $e) {
+        Log::error('verification-send-public-error', [
+            'message' => $e->getMessage(),
+            'from' => config('mail.from'),
+            'mailer' => config('mail.default'),
+            'user_email' => $user->email,
+        ]);
+        return response()->json([
+            'message' => 'No se pudo enviar el correo de verificación (public).',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 })->middleware('throttle:6,1')
   ->withoutMiddleware([
       \App\Http\Middleware\VerifyCsrfToken::class,
