@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Auth\Events\Verified;
@@ -269,4 +270,40 @@ Route::get('/debug-auth', function (Request $request) {
         'user_id' => Auth::id(),
         'session_id' => session()->getId(),
     ]);
+});
+
+// Minimal DB diagnostics to entender el 500 en producción (temporal)
+Route::get('/debug-db', function (Request $request) {
+    try {
+        $email = $request->query('email');
+        $canConnect = false;
+        try {
+            DB::select('select 1');
+            $canConnect = true;
+        } catch (\Throwable $e) {
+            // ignore, we'll return details below
+        }
+
+        $hasUsers = Schema::hasTable('users');
+        $columns = $hasUsers ? Schema::getColumnListing('users') : [];
+        $existsEmail = null;
+        if ($hasUsers && $email) {
+            $existsEmail = DB::table('users')->where('email', $email)->exists();
+        }
+
+        return response()->json([
+            'connection' => config('database.default'),
+            'can_connect' => $canConnect,
+            'has_users_table' => $hasUsers,
+            'users_columns' => $columns,
+            'email_checked' => $email,
+            'email_exists' => $existsEmail,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'message' => 'db_debug_error',
+            'type' => get_class($e),
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 });
