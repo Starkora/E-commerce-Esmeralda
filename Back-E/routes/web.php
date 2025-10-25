@@ -182,7 +182,13 @@ Route::post('/spa-register', function (Request $request) {
     }
 
     return response()->json(['message' => 'Usuario creado', 'needsVerification' => true], 201);
-});
+})
+// Asegura que este endpoint quede temporalmente exento del CSRF middleware,
+// incluso si hubiera cache de config/rutas en producción.
+->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
 
 // Temporary debug route: inspect CSRF headers/cookies/session
 Route::any('/debug-csrf', function (Request $request) {
