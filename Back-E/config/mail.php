@@ -49,6 +49,12 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        // SendGrid API transport (recomendado en PaaS para evitar puertos SMTP bloqueados)
+        // Requiere el paquete symfony/sendgrid-mailer en composer y la variable SENDGRID_API_KEY
+        'sendgrid' => [
+            'transport' => 'sendgrid',
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
