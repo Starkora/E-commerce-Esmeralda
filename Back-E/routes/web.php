@@ -66,6 +66,19 @@ Route::get('/debug-mail', function (Request $request) {
             'error' => $e->getMessage(),
             'mailer' => config('mail.default'),
             'from' => config('mail.from'),
+            // Añadimos diagnóstico también en error para ver qué valores está leyendo Laravel
+            'smtp' => [
+                'host' => config('mail.mailers.'.config('mail.default').'.host'),
+                'port' => config('mail.mailers.'.config('mail.default').'.port'),
+                'encryption' => config('mail.mailers.'.config('mail.default').'.encryption'),
+                'username' => (bool) config('mail.mailers.'.config('mail.default').'.username'),
+            ],
+            'env_overrides' => [
+                'MAIL_URL_set' => (bool) env('MAIL_URL'),
+                'MAIL_HOST' => env('MAIL_HOST'),
+                'MAIL_PORT' => env('MAIL_PORT'),
+                'MAIL_ENCRYPTION' => env('MAIL_ENCRYPTION'),
+            ],
         ], 500);
     }
 });
