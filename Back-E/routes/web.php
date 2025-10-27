@@ -216,7 +216,11 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) 
     }
 
     $frontUrl = rtrim(env('FORTIFY_URL', 'http://localhost:3000'), '/');
-    return redirect()->away($frontUrl.'/?verified=1');
+    // Permite personalizar a dónde redirige el enlace de verificación en el Front
+    // Por defecto irá a la home con ?verified=1, pero puedes setear FORTIFY_REDIRECT_PATH="/"
+    // o, por ejemplo, "/verify-email?verified=1"
+    $path = env('FORTIFY_REDIRECT_PATH', '/?verified=1');
+    return redirect()->away($frontUrl.$path);
 })->name('verification.verify');
 
 // SPA-friendly registration endpoint that returns JSON
