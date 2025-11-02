@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 
 const ResetPasswordPage: React.FC = () => {
   const router = useRouter();
@@ -49,10 +50,18 @@ const ResetPasswordPage: React.FC = () => {
     setLoading(true);
     try {
       const axios = (await import('axios')).default;
-      await axios.get('/api/sanctum/csrf-cookie', { withCredentials: true });
+      const apiBaseUrl = getApiBaseUrl();
+      if (!apiBaseUrl) throw new Error('Falta configurar NEXT_PUBLIC_API_URL con la URL del backend');
+
+      // Flujo CSRF explícito para cross-site
+      await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
+      const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
+      const csrfToken: string = (csrfResp as any)?.data?.csrf_token || '';
+
       await axios.post(
-        '/api/spa-reset-password',
+        `${apiBaseUrl}/spa-reset-password`,
         {
+          _token: csrfToken,
           email,
           token: resetToken,
           password: newPassword,
@@ -60,7 +69,12 @@ const ResetPasswordPage: React.FC = () => {
         },
         {
           withCredentials: true,
-          headers: { 'Accept': 'application/json' }
+          headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken || '',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+          }
         }
       );
       setSuccess('Contraseña cambiada correctamente. Ahora puedes iniciar sesión.');
