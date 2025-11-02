@@ -122,7 +122,8 @@ const LoginSection: React.FC = () => {
             await router.replace('/');
             setTimeout(() => {
                 try {
-                    window.dispatchEvent(new Event('login'));
+                    const user = (response && (response as any).data && (response as any).data.user) || null;
+                    window.dispatchEvent(new CustomEvent('login', { detail: user }));
                 } catch (e) {}
             }, 800);
         } catch (err: any) {

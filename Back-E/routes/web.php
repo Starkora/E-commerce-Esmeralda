@@ -33,7 +33,13 @@ Route::post('/spa-login', function (Request $request) {
         return response()->json(['message' => 'Tu correo no está verificado'], 403);
     }
     \Illuminate\Support\Facades\Auth::login($user);
-    return response()->json(['message' => 'Login exitoso']);
+    return response()->json([
+        'message' => 'Login exitoso',
+        'user' => [
+            'name' => $user->name,
+            'email' => $user->email,
+        ],
+    ]);
 })
 ->withoutMiddleware([
     \App\Http\Middleware\VerifyCsrfToken::class,

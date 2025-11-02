@@ -28,12 +28,18 @@ const Header: React.FC = () => {
                 setUser(null);
             }
         };
-        const handleLogin = () => {
-            fetchUser();
+        const handleLogin = (ev: Event) => {
+            // Si viene con detalle, úsalo para actualizar al instante; si no, consulta /user
+            const ce = ev as CustomEvent<any>;
+            if (ce && ce.detail && ce.detail.name) {
+                setUser({ name: ce.detail.name });
+            } else {
+                fetchUser();
+            }
         };
-        window.addEventListener('login', handleLogin);
+        window.addEventListener('login', handleLogin as EventListener);
         fetchUser(); // Intentar obtener usuario al cargar
-        return () => window.removeEventListener('login', handleLogin);
+        return () => window.removeEventListener('login', handleLogin as EventListener);
     }, []);
     const router = useRouter();
 
