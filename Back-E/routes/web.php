@@ -112,10 +112,15 @@ Route::get('/debug-mail', function (Request $request) {
     }
 });
 
+// Test super simple - solo para confirmar que el código se actualizó
+Route::get('/test-ping', function () {
+    return response()->json(['ping' => 'pong', 'timestamp' => time(), 'version' => 'v2-con-try-catch']);
+});
+
 // Endpoint de versión para verificar que Render tiene el código actualizado
 Route::get('/version-check', function () {
     return response()->json([
-        'version' => 'v2025-11-02-tipos-quitados',
+        'version' => 'v2025-11-02-tipos-quitados-con-try-catch',
         'contact_notification_uses_types' => false,
         'git_commit' => exec('git rev-parse --short HEAD 2>&1'),
         'last_modified' => filemtime(app_path('Notifications/ContactFormNotification.php')),
