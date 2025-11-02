@@ -29,22 +29,22 @@ class ContactFormNotification extends Notification
 
     public function toMail($notifiable)
     {
-        // Usamos la misma ruta que las demás notificaciones del sistema (MailMessage)
-        // y reutilizamos la vista de correo ya creada.
+        // Usar el patrón estándar de MailMessage (como CustomResetPasswordNotification)
+        // SIN vista personalizada para evitar problemas
         $message = (new MailMessage)
             ->subject('[Contacto] ' . $this->subjectLine)
-            ->view('emails.contact_message', [
-                'name' => $this->name,
-                'email' => $this->email,
-                'phone' => $this->phone,
-                'subjectLine' => $this->subjectLine,
-                'bodyMessage' => $this->bodyMessage,
-            ]);
-
-        // MailMessage no expone replyTo en todas las versiones; si está disponible lo usamos.
-        if (method_exists($message, 'replyTo')) {
-            $message->replyTo($this->email, $this->name);
+            ->greeting('Nuevo mensaje de contacto')
+            ->line('**Nombre:** ' . $this->name)
+            ->line('**Correo:** ' . $this->email);
+        
+        if ($this->phone) {
+            $message->line('**Teléfono:** ' . $this->phone);
         }
+        
+        $message->line('**Asunto:** ' . $this->subjectLine)
+                ->line('**Mensaje:**')
+                ->line($this->bodyMessage)
+                ->salutation('Saludos, ' . config('app.name'));
 
         return $message;
     }
