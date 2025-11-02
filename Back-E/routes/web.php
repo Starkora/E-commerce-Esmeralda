@@ -112,6 +112,53 @@ Route::get('/debug-mail', function (Request $request) {
     }
 });
 
+// Debug del flujo de notificación de Contacto usando la misma vista y pipeline que producción.
+// Protegido con DEBUG_KEY y acepta ?to= para el destinatario de prueba.
+Route::get('/debug-mail-contact', function (Request $request) {
+    if ($request->query('key') !== env('DEBUG_KEY')) {
+        abort(403, 'forbidden');
+    }
+
+    $to = $request->query('to', env('MAIL_TEST_TO'));
+    try {
+        \Illuminate\Support\Facades\Notification::route('mail', $to)->notify(
+            new \App\Notifications\ContactFormNotification(
+                'Contacto Debug',
+                'debug@example.com',
+                '999999999',
+                'Prueba desde /debug-mail-contact',
+                "Este es un mensaje de prueba enviado usando ContactFormNotification."
+            )
+        );
+
+        return response()->json([
+            'sent' => true,
+            'to' => $to,
+            'mailer' => config('mail.default'),
+            'from' => config('mail.from'),
+            'smtp' => [
+                'host' => config('mail.mailers.'.config('mail.default').'.host'),
+                'port' => config('mail.mailers.'.config('mail.default').'.port'),
+                'encryption' => config('mail.mailers.'.config('mail.default').'.encryption'),
+                'username' => (bool) config('mail.mailers.'.config('mail.default').'.username'),
+            ],
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'sent' => false,
+            'error' => $e->getMessage(),
+            'mailer' => config('mail.default'),
+            'from' => config('mail.from'),
+            'smtp' => [
+                'host' => config('mail.mailers.'.config('mail.default').'.host'),
+                'port' => config('mail.mailers.'.config('mail.default').'.port'),
+                'encryption' => config('mail.mailers.'.config('mail.default').'.encryption'),
+                'username' => (bool) config('mail.mailers.'.config('mail.default').'.username'),
+            ],
+        ], 500);
+    }
+});
+
 // Debug CSRF / Sesión para SPA (solo temporal, proteger con DEBUG_KEY si es necesario)
 Route::get('/debug-csrf', function (Request $request) {
     if (env('DEBUG_KEY') && $request->query('key') !== env('DEBUG_KEY')) {
