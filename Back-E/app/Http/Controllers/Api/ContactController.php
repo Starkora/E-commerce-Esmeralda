@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Mail\ContactMessage;
+use App\Notifications\ContactFormNotification;
 
 class ContactController extends Controller
 {
@@ -141,7 +142,7 @@ class ContactController extends Controller
             // Usar el mismo patrón que forgot-password: enviar una notificación por destinatario
             foreach ($recipients as $addr) {
                 Notification::route('mail', $addr)->notify(
-                    new \App\Notifications\ContactFormNotification(
+                    new ContactFormNotification(
                         $request->input('name'),
                         $request->input('email'),
                         $request->input('phone'),
