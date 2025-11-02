@@ -16,6 +16,7 @@ return [
         'forgot-password',
         'reset-password',
         'user',
+        'contact-send',
         'email/*'
     ],
 

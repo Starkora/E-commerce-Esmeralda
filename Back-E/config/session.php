@@ -2,8 +2,12 @@
 
 use Illuminate\Support\Str;
 
+$__appEnv = env('APP_ENV', 'production');
+$__defaultSameSite = $__appEnv === 'production' ? 'none' : 'lax';
+$__defaultSecure = ! in_array($__appEnv, ['local', 'testing'], true);
+
 // Normalize SameSite value from env to avoid case issues (expects: lax|strict|none|null)
-$__sameSite = env('SESSION_SAME_SITE', 'lax');
+$__sameSite = env('SESSION_SAME_SITE', $__defaultSameSite);
 if (is_string($__sameSite)) {
     $__sameSite = strtolower($__sameSite);
 }
@@ -177,7 +181,7 @@ return [
     */
 
     // Ensure secure cookie flag is a boolean (false for local dev)
-    'secure' => (bool) env('SESSION_SECURE_COOKIE', false),
+    'secure' => (bool) env('SESSION_SECURE_COOKIE', $__defaultSecure),
 
     /*
     |--------------------------------------------------------------------------
