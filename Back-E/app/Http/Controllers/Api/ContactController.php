@@ -69,6 +69,19 @@ class ContactController extends Controller
         } catch (\Throwable $e) {
             Log::error('Contact mail send failed', [
                 'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'code' => method_exists($e, 'getCode') ? $e->getCode() : null,
+                'to' => $to,
+                'mailer' => config('mail.default'),
+                // Detalles mínimos del mailer activo para diagnóstico (sin exponer secretos)
+                'mailer_config' => [
+                    'host' => config('mail.mailers.'.config('mail.default').'.host'),
+                    'port' => config('mail.mailers.'.config('mail.default').'.port'),
+                    'encryption' => config('mail.mailers.'.config('mail.default').'.encryption'),
+                    'uses_username' => (bool) config('mail.mailers.'.config('mail.default').'.username'),
+                    'transport' => config('mail.mailers.'.config('mail.default').'.transport'),
+                ],
+                'has_sendgrid_key' => (bool) env('SENDGRID_API_KEY'),
             ]);
             return response()->json(['message' => 'No se pudo enviar el mensaje en este momento. Inténtalo más tarde.'], 500);
         }
