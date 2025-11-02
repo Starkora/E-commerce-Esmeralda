@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
 import { getRecaptchaToken } from "@/utils/recaptcha";
 
 const Contact: React.FC = () => {
     const [form, setForm] = useState({
         name: "",
-        email: "",
         phone: "",
         subject: "",
         message: "",
@@ -14,9 +13,61 @@ const Contact: React.FC = () => {
     });
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<string | null>(null);
+    const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+    const [checkingUser, setCheckingUser] = useState(true);
 
     // Unificar con el resto del proyecto usando la misma utilidad
     const apiBase = useMemo(() => (getApiBaseUrl() || '').replace(/\/$/, ''), []);
+
+    useEffect(() => {
+        let mounted = true;
+        const fetchUser = async () => {
+            if (!apiBase) {
+                setCheckingUser(false);
+                return;
+            }
+            try {
+                const res = await fetch(`${apiBase}/user`, {
+                    credentials: "include",
+                    headers: { Accept: "application/json" }
+                });
+                if (!mounted) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(data);
+                    setForm((f) => ({ ...f, name: f.name || data?.name || "" }));
+                } else {
+                    setUser(null);
+                }
+            } catch (err) {
+                if (mounted) {
+                    setUser(null);
+                }
+            } finally {
+                if (mounted) {
+                    setCheckingUser(false);
+                }
+            }
+        };
+
+        const handleLogin = (ev: Event) => {
+            const custom = ev as CustomEvent<{ name?: string; email?: string }>;
+            if (custom?.detail) {
+                setUser(custom.detail);
+                setForm((f) => ({ ...f, name: f.name || custom.detail.name || "" }));
+            } else {
+                fetchUser();
+            }
+        };
+
+        window.addEventListener('login', handleLogin as EventListener);
+        fetchUser();
+
+        return () => {
+            mounted = false;
+            window.removeEventListener('login', handleLogin as EventListener);
+        };
+    }, [apiBase]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type, checked } = e.target as any;
@@ -34,7 +85,11 @@ const Contact: React.FC = () => {
             setResult("Debes aceptar la política de protección de datos.");
             return;
         }
-        if (!form.name || !form.email || !form.subject || !form.message) {
+        if (!user) {
+            setResult("Debes iniciar sesión para enviar un mensaje de contacto.");
+            return;
+        }
+        if (!form.name || !form.subject || !form.message) {
             setResult("Completa los campos obligatorios.");
             return;
         }
@@ -46,19 +101,19 @@ const Contact: React.FC = () => {
             // Usar GET con query parameters (funciona, a diferencia de POST)
             const params = new URLSearchParams({
                 name: form.name,
-                email: form.email,
                 phone: form.phone || '',
                 subject: form.subject,
                 message: form.message
             });
             
             const res = await fetch(`${apiBase}/contact-send?${params}`, {
-                method: "GET"
+                method: "GET",
+                credentials: "include"
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data?.message || "Error al enviar");
             setResult("¡Mensaje enviado! Te responderemos pronto.");
-            setForm({ name: "", email: "", phone: "", subject: "", message: "", acceptPolicy: false, website: "" });
+            setForm({ name: user.name || "", phone: "", subject: "", message: "", acceptPolicy: false, website: "" });
         } catch (err: any) {
             setResult(err.message || "No se pudo enviar tu mensaje.");
         } finally {
@@ -105,15 +160,15 @@ const Contact: React.FC = () => {
                 {/* Columna de Formulario de Contacto */}
                 <div className="w-1/2">
                     <p className="mb-4 text-gray-700">Si tienes alguna consulta déjanos tu mensaje y en breve te contestaremos.</p>
+                    {!checkingUser && !user && (
+                        <div className="mb-4 rounded border border-yellow-400 bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
+                            Necesitas iniciar sesión para usar el formulario de contacto. <a href="/login" className="underline">Inicia sesión aquí</a>.
+                        </div>
+                    )}
                     <form className="bg-gray-50 p-6 rounded-lg shadow-md" onSubmit={handleSubmit}>
                         <div className="mb-4">
                             <label className="block text-gray-600 mb-2">Nombre y apellidos</label>
                             <input name="name" value={form.name} onChange={handleChange} type="text" className="w-full px-3 py-2 border rounded-lg" placeholder="Nombre y apellidos" required />
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="block text-gray-600 mb-2">Correo electrónico</label>
-                            <input name="email" value={form.email} onChange={handleChange} type="email" className="w-full px-3 py-2 border rounded-lg" placeholder="Correo electrónico" required />
                         </div>
 
                         <div className="mb-4">
@@ -149,7 +204,7 @@ const Contact: React.FC = () => {
                                 {result}
                             </div>
                         )}
-                        <button type="submit" disabled={loading} className="w-full bg-black text-white py-2 rounded-lg hover:bg-emerald-400 disabled:opacity-60">
+                        <button type="submit" disabled={loading || checkingUser || !user} className="w-full bg-black text-white py-2 rounded-lg hover:bg-emerald-400 disabled:opacity-60">
                             {loading ? 'Enviando...' : 'Enviar'}
                         </button>
                     </form>
