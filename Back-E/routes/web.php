@@ -83,6 +83,34 @@ Route::get('/debug-mail', function (Request $request) {
     }
 });
 
+// Debug CSRF / Sesión para SPA (solo temporal, proteger con DEBUG_KEY si es necesario)
+Route::get('/debug-csrf', function (Request $request) {
+    if (env('DEBUG_KEY') && $request->query('key') !== env('DEBUG_KEY')) {
+        abort(403, 'forbidden');
+    }
+    return response()->json([
+        'session_id' => $request->session()->getId(),
+        'has_session_cookie' => $request->cookies->has(session_name()),
+        'csrf_token' => csrf_token(),
+        'config' => [
+            'same_site' => config('session.same_site'),
+            'secure' => config('session.secure'),
+            'partitioned' => config('session.partitioned'),
+            'domain' => config('session.domain'),
+            'driver' => config('session.driver'),
+        ],
+        'cors' => [
+            'supports_credentials' => config('cors.supports_credentials'),
+            'allowed_origins' => config('cors.allowed_origins'),
+            'paths' => config('cors.paths'),
+        ],
+        'sanctum_stateful' => config('sanctum.stateful'),
+        'headers_hint' => [
+            'expect_headers_on_post' => ['X-CSRF-TOKEN','X-Requested-With','Accept','Content-Type'],
+        ],
+    ]);
+});
+
 // Endpoint para solicitar recuperación de contraseña (envía email con link personalizado)
 Route::post('/spa-forgot-password', function (Request $request) {
     $request->validate(['email' => 'required|email']);
