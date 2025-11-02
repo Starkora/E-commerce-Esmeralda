@@ -53,16 +53,31 @@ class ContactController extends Controller
             }
         }
 
-        $to = config('mail.contact_to') ?: env('CONTACT_RECIPIENT');
-        if (!$to) {
-            // fallback to app mail from address if not configured
-            $to = config('mail.from.address');
+        // Normalizamos destinatarios desde CONTACT_RECIPIENT (soporta múltiples separados por coma o punto y coma)
+        $toRaw = config('mail.contact_to') ?: env('CONTACT_RECIPIENT');
+        $recipients = collect(preg_split('/[;,]/', (string) $toRaw, -1, PREG_SPLIT_NO_EMPTY))
+            ->map(fn ($v) => trim($v))
+            ->filter(fn ($v) => filter_var($v, FILTER_VALIDATE_EMAIL))
+            ->values();
+        if ($recipients->isEmpty()) {
+            // fallback al remitente global si no hay CONTACT_RECIPIENT válido
+            $fallback = config('mail.from.address');
+            if ($fallback && filter_var($fallback, FILTER_VALIDATE_EMAIL)) {
+                $recipients = collect([$fallback]);
+            }
         }
 
         try {
             // Enviar usando el mismo mecanismo que login/registro (Notifications)
             // para garantizar el mismo pipeline de mailer/transport.
-            Notification::route('mail', $to)->notify(
+            // Enviar a todos los destinatarios válidos
+            $routes = null;
+            foreach ($recipients as $idx => $addr) {
+                $routes = $routes
+                    ? $routes->route('mail', $addr)
+                    : Notification::route('mail', $addr);
+            }
+            ($routes ?: Notification::route('mail', config('mail.from.address')))->notify(
                 new \App\Notifications\ContactFormNotification(
                     $request->input('name'),
                     $request->input('email'),
@@ -76,7 +91,7 @@ class ContactController extends Controller
                 'message' => $e->getMessage(),
                 'exception' => get_class($e),
                 'code' => method_exists($e, 'getCode') ? $e->getCode() : null,
-                'to' => $to,
+                'recipients' => $recipients,
                 'mailer' => config('mail.default'),
                 // Detalles mínimos del mailer activo para diagnóstico (sin exponer secretos)
                 'mailer_config' => [
