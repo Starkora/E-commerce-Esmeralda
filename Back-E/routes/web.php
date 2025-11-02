@@ -417,15 +417,26 @@ Route::post('/email/verification-notification-public', function (Request $reques
       \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
   ]);
 
-// Test RAW email - sin notificaciones
+// Test RAW email - sin notificaciones - CON CAPTURA DE ERRORES
 Route::post('/test-raw-mail', function (Request $request) {
-    $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
-    
-    \Illuminate\Support\Facades\Mail::raw('Test de correo crudo desde Laravel', function ($message) use ($to) {
-        $message->to($to)->subject('Test Raw Mail');
-    });
-    
-    return response()->json(['ok' => true, 'sent_to' => $to, 'method' => 'Mail::raw']);
+    try {
+        $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
+        
+        \Illuminate\Support\Facades\Mail::raw('Test de correo crudo desde Laravel', function ($message) use ($to) {
+            $message->to($to)->subject('Test Raw Mail');
+        });
+        
+        return response()->json(['ok' => true, 'sent_to' => $to, 'method' => 'Mail::raw']);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'error' => $e->getMessage(),
+            'exception' => get_class($e),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
+    }
 })->middleware('throttle:5,1')
   ->withoutMiddleware([
       \App\Http\Middleware\VerifyCsrfToken::class,
@@ -443,17 +454,17 @@ Route::post('/test-simple-contact', function (Request $request) {
     
     $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
     
-    // Patrón EXACTO de forgot-password
+    // Usar SimpleContactNotification (copia exacta del patrón de CustomResetPasswordNotification)
     \Illuminate\Support\Facades\Notification::route('mail', $to)
-        ->notify(new \App\Notifications\ContactFormNotification(
-            $request->name,
-            $request->email,
-            $request->phone,
-            $request->subject,
-            $request->message
-        ));
+        ->notify(new \App\Notifications\SimpleContactNotification([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'subject' => $request->subject,
+            'message' => $request->message,
+        ]));
     
-    return response()->json(['ok' => true, 'sent_to' => $to]);
+    return response()->json(['ok' => true, 'sent_to' => $to, 'notification' => 'SimpleContactNotification']);
 })->middleware('throttle:5,1')
   ->withoutMiddleware([
       \App\Http\Middleware\VerifyCsrfToken::class,
