@@ -18,5 +18,8 @@ class VerifyCsrfToken extends Middleware
         // porque se comparan contra request()->path() (p.ej. "spa-register").
         // Con el slash no matchea y sigue lanzando 419.
         'spa-register',
+        // Replicamos la excepción temporal para recuperación de contraseña
+        'spa-forgot-password',
+        'spa-reset-password',
     ];
 }

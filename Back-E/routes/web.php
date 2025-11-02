@@ -123,7 +123,11 @@ Route::post('/spa-forgot-password', function (Request $request) {
     // Envía la notificación personalizada
     $user->notify(new \App\Notifications\CustomResetPasswordNotification($token, $user->email));
     return response()->json(['message' => 'Se ha enviado el enlace de recuperación a tu correo.']);
-});
+})
+->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
 
 // Endpoint para cambiar la contraseña usando el token del email
 Route::post('/spa-reset-password', function (Request $request) {
@@ -144,7 +148,11 @@ Route::post('/spa-reset-password', function (Request $request) {
     } else {
         return response()->json(['message' => 'No se pudo cambiar la contraseña.'], 500);
     }
-});
+})
+->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
