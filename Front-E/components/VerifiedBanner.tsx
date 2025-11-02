@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 // Banner simple para mostrar confirmación de verificación de correo.
 // Se activa cuando la URL trae ?verified=1 o ?verified=true
@@ -44,6 +45,14 @@ export default function VerifiedBanner() {
             <p className="text-sm opacity-90">
               Ya puedes iniciar sesión y disfrutar de Estilo Esmeralda.
             </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            >
+              Iniciar sesión
+            </Link>
           </div>
           <button
             aria-label="Cerrar aviso"

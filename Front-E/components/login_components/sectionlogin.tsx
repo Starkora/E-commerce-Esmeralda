@@ -3,6 +3,7 @@ import { Transition } from "@headlessui/react";
 import Link from "next/link";
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { getApiBaseUrl } from "@/utils/apiBaseUrl";
 const LoginSection: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -45,10 +46,18 @@ const LoginSection: React.FC = () => {
         }
         try {
             const axios = (await import('axios')).default;
-            await axios.get('/api/sanctum/csrf-cookie', { withCredentials: true });
+            const apiBaseUrl = getApiBaseUrl();
+            if (!apiBaseUrl) throw new Error('Falta configurar NEXT_PUBLIC_API_URL con la URL del backend');
+
+            // 1) Obtener cookies y token CSRF desde el backend
+            await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
+            const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
+            const csrfToken: string = csrfResp?.data?.csrf_token || '';
+
             const response = await axios.post(
-                '/api/spa-reset-password',
+                `${apiBaseUrl}/spa-reset-password`,
                 {
+                    _token: csrfToken,
                     email,
                     token: resetToken,
                     password: newPassword,
@@ -56,7 +65,12 @@ const LoginSection: React.FC = () => {
                 },
                 {
                     withCredentials: true,
-                    headers: { 'Accept': 'application/json' }
+                    headers: { 
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    }
                 }
             );
             toast.success('Contraseña cambiada correctamente');
@@ -81,16 +95,26 @@ const LoginSection: React.FC = () => {
         setError("");
         try {
             const axios = (await import('axios')).default;
-            // 1. Obtener la cookie CSRF de Sanctum
-            await axios.get('/api/sanctum/csrf-cookie', { withCredentials: true });
+            const apiBaseUrl = getApiBaseUrl();
+            if (!apiBaseUrl) throw new Error('Falta configurar NEXT_PUBLIC_API_URL con la URL del backend');
+
+            // 1. Obtener la cookie CSRF de Sanctum y token explícito
+            await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
+            const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
+            const csrfToken: string = csrfResp?.data?.csrf_token || '';
 
             // 2. Enviar credenciales al endpoint de login personalizado
             const response = await axios.post(
-                '/api/spa-login',
+                `${apiBaseUrl}/spa-login`,
                 { email, password },
                 {
                     withCredentials: true,
-                    headers: { 'Accept': 'application/json' }
+                    headers: { 
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    }
                 }
             );
 
@@ -263,13 +287,25 @@ const LoginSection: React.FC = () => {
                                                 }
                                                 try {
                                                     const axios = (await import('axios')).default;
-                                                    await axios.get('/api/sanctum/csrf-cookie', { withCredentials: true });
+                                                    const apiBaseUrl = getApiBaseUrl();
+                                                    if (!apiBaseUrl) throw new Error('Falta configurar NEXT_PUBLIC_API_URL con la URL del backend');
+
+                                                    // Cookies y token CSRF
+                                                    await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
+                                                    const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
+                                                    const csrfToken: string = csrfResp?.data?.csrf_token || '';
+
                                                     await axios.post(
-                                                        '/api/spa-forgot-password',
-                                                        { email },
+                                                        `${apiBaseUrl}/spa-forgot-password`,
+                                                        { _token: csrfToken, email },
                                                         {
                                                             withCredentials: true,
-                                                            headers: { 'Accept': 'application/json' }
+                                                            headers: { 
+                                                                'Accept': 'application/json',
+                                                                'X-CSRF-TOKEN': csrfToken || '',
+                                                                'X-Requested-With': 'XMLHttpRequest',
+                                                                'Content-Type': 'application/json',
+                                                            }
                                                         }
                                                     );
                                                     toast.success('Enlace de recuperación enviado a tu correo');
