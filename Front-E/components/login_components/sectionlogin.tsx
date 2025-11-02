@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
 import { getRecaptchaToken } from "@/utils/recaptcha";
+import { useAuth } from "@/context/AuthContext";
 const LoginSection: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -90,6 +91,8 @@ const LoginSection: React.FC = () => {
 
     // ...existing code...
 
+    const { login: setAuthUser } = useAuth();
+
     // Función de login usando axios
     const handleLogin = async () => {
         setLoading(true);
@@ -123,13 +126,12 @@ const LoginSection: React.FC = () => {
             );
 
             toast.success('Inicio de sesión exitoso', { duration: 3000 });
+            const user = (response && (response as any).data && (response as any).data.user) || null;
+            // Guardar usuario en el contexto (y localStorage) para persistencia inmediata
+            try { setAuthUser(user); } catch {}
+            // Mantener compatibilidad con el evento existente
+            try { window.dispatchEvent(new CustomEvent('login', { detail: user })); } catch {}
             await router.replace('/');
-            setTimeout(() => {
-                try {
-                    const user = (response && (response as any).data && (response as any).data.user) || null;
-                    window.dispatchEvent(new CustomEvent('login', { detail: user }));
-                } catch (e) {}
-            }, 800);
         } catch (err: any) {
             if (err.response && err.response.data) {
                 const message = err.response.data.message || 'Credenciales incorrectas';

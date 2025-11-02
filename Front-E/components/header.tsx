@@ -5,61 +5,14 @@ import AnnouncementBar from './AnnouncementBar';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
+import { useAuth } from '@/context/AuthContext';
 
 const Header: React.FC = () => {
     const [isSearchActive, setIsSearchActive] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
-    // Estado local del usuario
-    const [user, setUser] = useState<{ name?: string } | null>(null);
-    // Detectar login por evento global
-    React.useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const axios = (await import('axios')).default;
-                const apiBaseUrl = getApiBaseUrl();
-                if (!apiBaseUrl) return;
-
-                // Asegura cookies CSRF/Sanctum antes de consultar /user (mejora compatibilidad cross-site)
-                try {
-                    await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
-                } catch {}
-
-                const tryGet = async () => axios.get(`${apiBaseUrl}/user`, {
-                    withCredentials: true,
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                let response;
-                try {
-                    response = await tryGet();
-                } catch (err: any) {
-                    // Reintento único si 401/419 tras refrescar CSRF
-                    try { await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true }); } catch {}
-                    response = await tryGet();
-                }
-
-                if (response?.data?.name) {
-                    setUser({ name: response.data.name });
-                } else {
-                    setUser(null);
-                }
-            } catch (e) {
-                setUser(null);
-            }
-        };
-        const handleLogin = (ev: Event) => {
-            // Si viene con detalle, úsalo para actualizar al instante; si no, consulta /user
-            const ce = ev as CustomEvent<any>;
-            if (ce && ce.detail && ce.detail.name) {
-                setUser({ name: ce.detail.name });
-            } else {
-                fetchUser();
-            }
-        };
-        window.addEventListener('login', handleLogin as EventListener);
-    fetchUser(); // Intentar obtener usuario al cargar
-        return () => window.removeEventListener('login', handleLogin as EventListener);
-    }, []);
+    const { user, fetchUser, logout } = useAuth();
+    // Asegurar que intentemos sincronizar con el backend cuando se monta el header
+    React.useEffect(() => { fetchUser().catch(() => {}); }, []);
     const router = useRouter();
 
     // Redirigir al formulario de login
@@ -68,14 +21,7 @@ const Header: React.FC = () => {
     };
 
     const handleLogout = async () => {
-        try {
-            const axios = (await import('axios')).default;
-            const apiBaseUrl = getApiBaseUrl();
-            if (apiBaseUrl) {
-                await axios.post(`${apiBaseUrl}/spa-logout`, {}, { withCredentials: true, headers: { 'Accept': 'application/json' } });
-            }
-        } catch (e) {}
-        setUser(null);
+        await logout();
         const toast = (await import('react-hot-toast')).default;
         toast.success('Sesión cerrada correctamente', { duration: 1000 });
         window.location.replace('/login');
