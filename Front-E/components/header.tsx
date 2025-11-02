@@ -18,7 +18,26 @@ const Header: React.FC = () => {
                 const axios = (await import('axios')).default;
                 const apiBaseUrl = getApiBaseUrl();
                 if (!apiBaseUrl) return;
-                const response = await axios.get(`${apiBaseUrl}/user`, { withCredentials: true, headers: { 'Accept': 'application/json' } });
+
+                // Asegura cookies CSRF/Sanctum antes de consultar /user (mejora compatibilidad cross-site)
+                try {
+                    await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
+                } catch {}
+
+                const tryGet = async () => axios.get(`${apiBaseUrl}/user`, {
+                    withCredentials: true,
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                let response;
+                try {
+                    response = await tryGet();
+                } catch (err: any) {
+                    // Reintento único si 401/419 tras refrescar CSRF
+                    try { await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true }); } catch {}
+                    response = await tryGet();
+                }
+
                 if (response?.data?.name) {
                     setUser({ name: response.data.name });
                 } else {
@@ -38,7 +57,7 @@ const Header: React.FC = () => {
             }
         };
         window.addEventListener('login', handleLogin as EventListener);
-        fetchUser(); // Intentar obtener usuario al cargar
+    fetchUser(); // Intentar obtener usuario al cargar
         return () => window.removeEventListener('login', handleLogin as EventListener);
     }, []);
     const router = useRouter();
