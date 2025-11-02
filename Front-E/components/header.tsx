@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 import { useAuth } from '@/context/AuthContext';
+import AccountMenu from './AccountMenu';
 
 const Header: React.FC = () => {
     const [isSearchActive, setIsSearchActive] = useState(false);
@@ -73,12 +74,7 @@ const Header: React.FC = () => {
                                 <span className="mr-2">Hola,</span>
                                 <span className="font-semibold">{user.name}</span>
                             </div>
-                            <button
-                                onClick={handleLogout}
-                                className="bg-white text-black px-3 py-1 rounded-full text-sm hover:opacity-90"
-                            >
-                                Cerrar sesión
-                            </button>
+                            <AccountMenu userName={user.name} onLogout={handleLogout} />
                         </div>
                     ) : (
                         <button onClick={handleLogin} className="hover:border-b hover:border-white flex items-center bg-transparent border-none">

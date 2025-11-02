@@ -18,6 +18,10 @@ const LoginSection: React.FC = () => {
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
     // Autocompletar token y email desde la URL cuando se muestra el formulario de cambio de contraseña
     const router = useRouter();
+    const redirectTarget = React.useMemo(() => {
+        const raw = Array.isArray(router.query.redirect) ? router.query.redirect[0] : router.query.redirect;
+        return (typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//')) ? raw : null;
+    }, [router.query.redirect]);
     // Redirigir automáticamente si la URL contiene reset_token y email
     React.useEffect(() => {
         if (router.query.reset_token && router.query.email) {
@@ -131,7 +135,10 @@ const LoginSection: React.FC = () => {
             try { setAuthUser(user); } catch {}
             // Mantener compatibilidad con el evento existente
             try { window.dispatchEvent(new CustomEvent('login', { detail: user })); } catch {}
-            await router.replace('/');
+            // Redirección segura: si viene ?redirect=/algo, ir allí; de lo contrario, al home
+            const rawRedirect = Array.isArray(router.query.redirect) ? router.query.redirect[0] : router.query.redirect;
+            const safeRedirect = (typeof rawRedirect === 'string' && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')) ? rawRedirect : '/';
+            await router.replace(safeRedirect);
         } catch (err: any) {
             if (err.response && err.response.data) {
                 const message = err.response.data.message || 'Credenciales incorrectas';
@@ -198,6 +205,12 @@ const LoginSection: React.FC = () => {
                             <form onSubmit={validateForm} className="space-y-4">
                                 <h1 className="text-2xl font-semibold text-center">Iniciar Sesión</h1>
                                 <p className="text-gray-600">Por favor introduzca su email y contraseña</p>
+
+                                {redirectTarget && (
+                                    <div className="p-2 bg-amber-50 border border-amber-300 text-amber-700 rounded text-sm">
+                                        Necesitas iniciar sesión para continuar a <span className="font-medium">{redirectTarget}</span>.
+                                    </div>
+                                )}
 
                                 <div>
                                     <label htmlFor="email" className="block text-left text-gray-700">Correo Electrónico</label>
