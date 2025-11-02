@@ -18,6 +18,29 @@ class ContactController extends Controller
      */
     public function send(Request $request)
     {
+        // Envolvemos TODO en un try-catch maestro para garantizar siempre JSON
+        try {
+            return $this->processSend($request);
+        } catch (\Throwable $e) {
+            Log::error('Contact controller fatal error', [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'message' => 'Error fatal en el controlador',
+                'error' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 500);
+        }
+    }
+
+    private function processSend(Request $request)
+    {
         try {
             // Basic validation + honeypot
             $validator = Validator::make($request->all(), [
@@ -114,24 +137,19 @@ class ContactController extends Controller
         }
 
         try {
-            // Enviar usando el mismo mecanismo que login/registro (Notifications)
-            // para garantizar el mismo pipeline de mailer/transport.
             // Enviar a todos los destinatarios válidos
-            $routes = null;
-            foreach ($recipients as $idx => $addr) {
-                $routes = $routes
-                    ? $routes->route('mail', $addr)
-                    : Notification::route('mail', $addr);
+            // Usar el mismo patrón que forgot-password: enviar una notificación por destinatario
+            foreach ($recipients as $addr) {
+                Notification::route('mail', $addr)->notify(
+                    new \App\Notifications\ContactFormNotification(
+                        $request->input('name'),
+                        $request->input('email'),
+                        $request->input('phone'),
+                        $request->input('subject'),
+                        $request->input('message')
+                    )
+                );
             }
-            ($routes ?: Notification::route('mail', config('mail.from.address')))->notify(
-                new \App\Notifications\ContactFormNotification(
-                    $request->input('name'),
-                    $request->input('email'),
-                    $request->input('phone'),
-                    $request->input('subject'),
-                    $request->input('message')
-                )
-            );
         } catch (\Throwable $e) {
             Log::error('Contact mail send failed', [
                 'message' => $e->getMessage(),
