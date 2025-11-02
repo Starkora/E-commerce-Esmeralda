@@ -43,9 +43,13 @@ const Contact: React.FC = () => {
             // Obtener token reCAPTCHA v3 si está configurado
             const recaptchaToken = await getRecaptchaToken('contact');
 
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (process.env.NEXT_PUBLIC_CONTACT_DEBUG_KEY) {
+                headers['X-Debug-Key'] = process.env.NEXT_PUBLIC_CONTACT_DEBUG_KEY as string;
+            }
             const res = await fetch(`${apiBase}/api/contact`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers,
                 body: JSON.stringify({ ...form, recaptchaToken }),
             });
             const data = await res.json().catch(() => ({}));

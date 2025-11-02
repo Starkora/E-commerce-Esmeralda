@@ -87,6 +87,7 @@ class ContactController extends Controller
                 )
             );
         } catch (\Throwable $e) {
+            $debug = $request->header('X-Debug-Key') && $request->header('X-Debug-Key') === env('DEBUG_KEY');
             Log::error('Contact mail send failed', [
                 'message' => $e->getMessage(),
                 'exception' => get_class($e),
@@ -103,6 +104,15 @@ class ContactController extends Controller
                 ],
                 'has_sendgrid_key' => (bool) env('SENDGRID_API_KEY'),
             ]);
+            if ($debug) {
+                return response()->json([
+                    'message' => 'Contact send failed (debug)',
+                    'error' => $e->getMessage(),
+                    'exception' => get_class($e),
+                    'recipients' => $recipients,
+                    'mailer' => config('mail.default'),
+                ], 500);
+            }
             return response()->json(['message' => 'No se pudo enviar el mensaje en este momento. Inténtalo más tarde.'], 500);
         }
 
