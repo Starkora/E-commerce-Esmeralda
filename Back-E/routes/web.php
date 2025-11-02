@@ -443,6 +443,10 @@ Route::post('/email/verification-notification-public', function (Request $reques
 
 // Test RAW email - sin notificaciones - CON CAPTURA DE ERRORES
 Route::post('/test-raw-mail', function (Request $request) {
+    // Paso 0: confirmar que entramos a la ruta
+    if ($request->query('step') === null) {
+        return response()->json(['ok' => true, 'stage' => 'entered-route', 'method' => 'POST', 'next' => 'append ?step=send to execute mail send']);
+    }
     try {
         $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
         
@@ -450,10 +454,11 @@ Route::post('/test-raw-mail', function (Request $request) {
             $message->to($to)->subject('Test Raw Mail');
         });
         
-        return response()->json(['ok' => true, 'sent_to' => $to, 'method' => 'Mail::raw']);
+        return response()->json(['ok' => true, 'sent_to' => $to, 'method' => 'Mail::raw', 'stage' => 'sent']);
     } catch (\Throwable $e) {
         return response()->json([
             'ok' => false,
+            'stage' => 'caught-exception',
             'error' => $e->getMessage(),
             'exception' => get_class($e),
             'file' => $e->getFile(),
