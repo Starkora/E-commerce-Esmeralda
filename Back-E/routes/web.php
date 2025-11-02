@@ -34,7 +34,11 @@ Route::post('/spa-login', function (Request $request) {
     }
     \Illuminate\Support\Facades\Auth::login($user);
     return response()->json(['message' => 'Login exitoso']);
-});
+})
+->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
 
 // Debug puntual de correo (proteger con DEBUG_KEY). Úsalo solo temporalmente.
 Route::get('/debug-mail', function (Request $request) {
