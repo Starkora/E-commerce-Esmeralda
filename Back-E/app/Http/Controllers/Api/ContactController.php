@@ -140,7 +140,10 @@ class ContactController extends Controller
         try {
             // Enviar a todos los destinatarios válidos
             // Usar el mismo patrón que forgot-password: enviar una notificación por destinatario
-            foreach ($recipients as $addr) {
+            // Convertimos a array para evitar problemas con Collection
+            $recipientsArray = $recipients->toArray();
+            
+            foreach ($recipientsArray as $addr) {
                 Notification::route('mail', $addr)->notify(
                     new ContactFormNotification(
                         $request->input('name'),
@@ -156,7 +159,7 @@ class ContactController extends Controller
                 'message' => $e->getMessage(),
                 'exception' => get_class($e),
                 'code' => method_exists($e, 'getCode') ? $e->getCode() : null,
-                'recipients' => $recipients,
+                'recipients' => $recipientsArray ?? $recipients->toArray(),
                 'trace' => $e->getTraceAsString(),
                 'mailer' => config('mail.default'),
                 // Detalles mínimos del mailer activo para diagnóstico (sin exponer secretos)
@@ -174,7 +177,7 @@ class ContactController extends Controller
                 'message' => 'Error al enviar el correo',
                 'error' => $e->getMessage(),
                 'exception' => get_class($e),
-                'recipients' => $recipients->toArray(),
+                'recipients' => $recipientsArray ?? $recipients->toArray(),
             ], 500);
         }
 
