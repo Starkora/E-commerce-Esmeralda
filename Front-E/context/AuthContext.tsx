@@ -5,6 +5,8 @@ export type User = {
   id?: number;
   name: string;
   email?: string;
+  lastName?: string;
+  phone?: string;
 };
 
 type AuthContextType = {
@@ -49,7 +51,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { Accept: 'application/json' },
       });
       if (res?.data?.name) {
-        const u: User = { id: res.data.id, name: res.data.name, email: res.data.email };
+        const u: User = {
+          id: res.data.id,
+          name: res.data.name,
+          email: res.data.email,
+          lastName: res.data.last_name || res.data.lastname || res.data.apellido || undefined,
+          phone: res.data.phone || res.data.telefono || undefined,
+        };
         setUser(u);
         try { localStorage.setItem('ee_user', JSON.stringify(u)); } catch {}
       }
