@@ -120,14 +120,19 @@ Route::get('/debug-mail-contact', function (Request $request) {
     }
 
     $to = $request->query('to', env('MAIL_TEST_TO'));
+    $fromEmail = $request->query('fromEmail', 'debug@example.com');
+    $fromName = $request->query('fromName', 'Contacto Debug');
+    $phone = $request->query('phone', '999999999');
+    $subject = $request->query('subject', 'Prueba desde /debug-mail-contact');
+    $body = $request->query('body', 'Este es un mensaje de prueba enviado usando ContactFormNotification.');
     try {
         \Illuminate\Support\Facades\Notification::route('mail', $to)->notify(
             new \App\Notifications\ContactFormNotification(
-                'Contacto Debug',
-                'debug@example.com',
-                '999999999',
-                'Prueba desde /debug-mail-contact',
-                "Este es un mensaje de prueba enviado usando ContactFormNotification."
+                $fromName,
+                $fromEmail,
+                $phone,
+                $subject,
+                $body
             )
         );
 
@@ -142,6 +147,7 @@ Route::get('/debug-mail-contact', function (Request $request) {
                 'encryption' => config('mail.mailers.'.config('mail.default').'.encryption'),
                 'username' => (bool) config('mail.mailers.'.config('mail.default').'.username'),
             ],
+            'using' => compact('fromEmail','fromName','phone','subject'),
         ]);
     } catch (\Throwable $e) {
         return response()->json([
@@ -155,6 +161,7 @@ Route::get('/debug-mail-contact', function (Request $request) {
                 'encryption' => config('mail.mailers.'.config('mail.default').'.encryption'),
                 'username' => (bool) config('mail.mailers.'.config('mail.default').'.username'),
             ],
+            'using' => compact('fromEmail','fromName','phone','subject'),
         ], 500);
     }
 });
