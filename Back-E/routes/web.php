@@ -150,42 +150,53 @@ Route::get('/debug-last-log', function (Request $request) {
 
 // CONTACTO PÚBLICO - Usando Mail::raw (la única forma que funciona)
 Route::get('/contact-send', function (Request $request) {
-    // Validación básica con query parameters
-    $name = $request->query('name');
-    $email = $request->query('email'); 
+    $user = $request->user();
+    if (! $user) {
+        return response()->json([
+            'ok' => false,
+            'error' => 'Debes iniciar sesión para enviar un mensaje.',
+            'message' => 'Debes iniciar sesión para enviar un mensaje.'
+        ], 401);
+    }
+
+    if (method_exists($user, 'hasVerifiedEmail') && ! $user->hasVerifiedEmail()) {
+        return response()->json([
+            'ok' => false,
+            'error' => 'Debes verificar tu correo electrónico antes de contactar.',
+            'message' => 'Debes verificar tu correo electrónico antes de contactar.'
+        ], 403);
+    }
+
+    $name = $request->query('name') ?: $user->name;
     $phone = $request->query('phone');
     $subject = $request->query('subject');
     $message = $request->query('message');
-    
-    if (!$name || !$email || !$subject || !$message) {
+
+    if (! $name || ! $subject || ! $message) {
         return response()->json([
             'ok' => false,
-            'error' => 'Faltan campos requeridos: name, email, subject, message'
-        ], 400);
-    }
-    
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return response()->json([
-            'ok' => false,
-            'error' => 'Email inválido'
+            'error' => 'Faltan campos requeridos: name, subject, message',
+            'message' => 'Faltan campos requeridos: name, subject, message'
         ], 400);
     }
 
+    $senderEmail = $user->email;
+
     try {
         $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
-        
+
         // Usar Mail::raw directamente (sabemos que funciona)
         $emailBody = "NUEVO MENSAJE DE CONTACTO\n\n";
-        $emailBody .= "Nombre: {$name}\n";
-        $emailBody .= "Email: {$email}\n";
+        $emailBody .= "Nombre remitente: {$name}\n";
+        $emailBody .= "Correo cuenta: {$senderEmail}\n";
         $emailBody .= "Teléfono: " . ($phone ?: 'No proporcionado') . "\n";
         $emailBody .= "Asunto: {$subject}\n\n";
         $emailBody .= "Mensaje:\n{$message}";
-        
-        \Illuminate\Support\Facades\Mail::raw($emailBody, function ($mail) use ($to, $subject, $email, $name) {
+
+        \Illuminate\Support\Facades\Mail::raw($emailBody, function ($mail) use ($to, $subject, $senderEmail, $name) {
             $mail->to($to)
                  ->subject('[Contacto Web] ' . $subject)
-                 ->replyTo($email, $name);
+                 ->replyTo($senderEmail, $name ?: null);
         });
 
         return response()->json([
@@ -197,10 +208,11 @@ Route::get('/contact-send', function (Request $request) {
         return response()->json([
             'ok' => false,
             'error' => 'Error al enviar: ' . $e->getMessage(),
+            'message' => 'Error al enviar: ' . $e->getMessage(),
             'exception' => get_class($e)
         ], 500);
     }
-})->middleware('throttle:5,1');
+})->middleware(['auth:sanctum', 'throttle:5,1']);
 
 // Debug del flujo de notificación de Contacto usando la misma vista y pipeline que producción.
 // Protegido con DEBUG_KEY y acepta ?to= para el destinatario de prueba.
