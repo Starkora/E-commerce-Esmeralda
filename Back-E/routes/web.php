@@ -129,6 +129,25 @@ Route::get('/version-check', function () {
     ]);
 });
 
+// Leer las últimas líneas del log para diagnosticar (protegido por DEBUG_KEY)
+Route::get('/debug-last-log', function (Request $request) {
+    if ($request->query('key') !== env('DEBUG_KEY')) {
+        abort(403, 'forbidden');
+    }
+    $path = storage_path('logs/laravel.log');
+    if (!file_exists($path)) {
+        return response("No existe archivo de log en $path", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+    }
+    $size = filesize($path);
+    $bytes = 100000; // ~100 KB
+    $start = max(0, $size - $bytes);
+    $fh = fopen($path, 'r');
+    fseek($fh, $start);
+    $content = fread($fh, $bytes);
+    fclose($fh);
+    return response($content, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+});
+
 // Debug del flujo de notificación de Contacto usando la misma vista y pipeline que producción.
 // Protegido con DEBUG_KEY y acepta ?to= para el destinatario de prueba.
 Route::get('/debug-mail-contact', function (Request $request) {
