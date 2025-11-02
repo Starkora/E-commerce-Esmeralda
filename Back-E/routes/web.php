@@ -148,6 +148,56 @@ Route::get('/debug-last-log', function (Request $request) {
     return response($content, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
 });
 
+// CONTACTO PÚBLICO - Endpoint GET que funciona
+Route::get('/contact-send', function (Request $request) {
+    // Validación básica con query parameters
+    $name = $request->query('name');
+    $email = $request->query('email'); 
+    $phone = $request->query('phone');
+    $subject = $request->query('subject');
+    $message = $request->query('message');
+    
+    if (!$name || !$email || !$subject || !$message) {
+        return response()->json([
+            'ok' => false,
+            'error' => 'Faltan campos requeridos: name, email, subject, message'
+        ], 400);
+    }
+    
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return response()->json([
+            'ok' => false,
+            'error' => 'Email inválido'
+        ], 400);
+    }
+
+    try {
+        $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
+        
+        \Illuminate\Support\Facades\Notification::route('mail', $to)->notify(
+            new \App\Notifications\ContactFormNotification(
+                $name,
+                $email,
+                $phone,
+                $subject,
+                $message
+            )
+        );
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Mensaje enviado correctamente',
+            'sent_to' => $to
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'error' => 'Error al enviar: ' . $e->getMessage(),
+            'exception' => get_class($e)
+        ], 500);
+    }
+})->middleware('throttle:5,1');
+
 // Debug del flujo de notificación de Contacto usando la misma vista y pipeline que producción.
 // Protegido con DEBUG_KEY y acepta ?to= para el destinatario de prueba.
 Route::get('/debug-mail-contact', function (Request $request) {

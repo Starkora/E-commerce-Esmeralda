@@ -43,14 +43,17 @@ const Contact: React.FC = () => {
             // Obtener token reCAPTCHA v3 si está configurado
             const recaptchaToken = await getRecaptchaToken('contact');
 
-            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-            if (process.env.NEXT_PUBLIC_CONTACT_DEBUG_KEY) {
-                headers['X-Debug-Key'] = process.env.NEXT_PUBLIC_CONTACT_DEBUG_KEY as string;
-            }
-            const res = await fetch(`${apiBase}/api/contact`, {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ ...form, recaptchaToken }),
+            // Usar GET con query parameters (funciona, a diferencia de POST)
+            const params = new URLSearchParams({
+                name: form.name,
+                email: form.email,
+                phone: form.phone || '',
+                subject: form.subject,
+                message: form.message
+            });
+            
+            const res = await fetch(`${apiBase}/contact-send?${params}`, {
+                method: "GET"
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data?.message || "Error al enviar");
