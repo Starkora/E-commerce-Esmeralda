@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { getApiBaseUrl } from "@/utils/apiBaseUrl";
+import { getRecaptchaToken } from "@/utils/recaptcha";
 
 const Contact: React.FC = () => {
     const [form, setForm] = useState({
@@ -13,7 +15,8 @@ const Contact: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<string | null>(null);
 
-    const apiBase = useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "", []);
+    // Unificar con el resto del proyecto usando la misma utilidad
+    const apiBase = useMemo(() => (getApiBaseUrl() || '').replace(/\/$/, ''), []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type, checked } = e.target as any;
@@ -37,10 +40,13 @@ const Contact: React.FC = () => {
         }
         try {
             setLoading(true);
+            // Obtener token reCAPTCHA v3 si está configurado
+            const recaptchaToken = await getRecaptchaToken('contact');
+
             const res = await fetch(`${apiBase}/api/contact`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form),
+                body: JSON.stringify({ ...form, recaptchaToken }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data?.message || "Error al enviar");
