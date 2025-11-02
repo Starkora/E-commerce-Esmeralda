@@ -405,6 +405,34 @@ Route::post('/email/verification-notification-public', function (Request $reques
       \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
   ]);
 
+// Test simple contact - replica exacta del patrón de forgot-password
+Route::post('/test-simple-contact', function (Request $request) {
+    $request->validate([
+        'name' => 'required|string',
+        'email' => 'required|email',
+        'subject' => 'required|string',
+        'message' => 'required|string',
+    ]);
+    
+    $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
+    
+    // Patrón EXACTO de forgot-password
+    \Illuminate\Support\Facades\Notification::route('mail', $to)
+        ->notify(new \App\Notifications\ContactFormNotification(
+            $request->name,
+            $request->email,
+            $request->phone,
+            $request->subject,
+            $request->message
+        ));
+    
+    return response()->json(['ok' => true, 'sent_to' => $to]);
+})->middleware('throttle:5,1')
+  ->withoutMiddleware([
+      \App\Http\Middleware\VerifyCsrfToken::class,
+      \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+  ]);
+
 // Email verification redirect back to frontend
 Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
     $user = \App\Models\User::findOrFail($id);
