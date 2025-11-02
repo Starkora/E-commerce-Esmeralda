@@ -148,7 +148,7 @@ Route::get('/debug-last-log', function (Request $request) {
     return response($content, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
 });
 
-// CONTACTO PÚBLICO - Endpoint GET que funciona
+// CONTACTO PÚBLICO - Usando Mail::raw (la única forma que funciona)
 Route::get('/contact-send', function (Request $request) {
     // Validación básica con query parameters
     $name = $request->query('name');
@@ -174,15 +174,19 @@ Route::get('/contact-send', function (Request $request) {
     try {
         $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
         
-        \Illuminate\Support\Facades\Notification::route('mail', $to)->notify(
-            new \App\Notifications\ContactFormNotification(
-                $name,
-                $email,
-                $phone,
-                $subject,
-                $message
-            )
-        );
+        // Usar Mail::raw directamente (sabemos que funciona)
+        $emailBody = "NUEVO MENSAJE DE CONTACTO\n\n";
+        $emailBody .= "Nombre: {$name}\n";
+        $emailBody .= "Email: {$email}\n";
+        $emailBody .= "Teléfono: " . ($phone ?: 'No proporcionado') . "\n";
+        $emailBody .= "Asunto: {$subject}\n\n";
+        $emailBody .= "Mensaje:\n{$message}";
+        
+        \Illuminate\Support\Facades\Mail::raw($emailBody, function ($mail) use ($to, $subject, $email, $name) {
+            $mail->to($to)
+                 ->subject('[Contacto Web] ' . $subject)
+                 ->replyTo($email, $name);
+        });
 
         return response()->json([
             'ok' => true,
