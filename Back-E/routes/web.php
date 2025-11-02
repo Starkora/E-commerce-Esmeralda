@@ -112,6 +112,18 @@ Route::get('/debug-mail', function (Request $request) {
     }
 });
 
+// Endpoint de versión para verificar que Render tiene el código actualizado
+Route::get('/version-check', function () {
+    return response()->json([
+        'version' => 'v2025-11-02-tipos-quitados',
+        'contact_notification_uses_types' => false,
+        'git_commit' => exec('git rev-parse --short HEAD 2>&1'),
+        'last_modified' => filemtime(app_path('Notifications/ContactFormNotification.php')),
+        'notification_class_exists' => class_exists('App\Notifications\ContactFormNotification'),
+        'php_version' => phpversion(),
+    ]);
+});
+
 // Debug del flujo de notificación de Contacto usando la misma vista y pipeline que producción.
 // Protegido con DEBUG_KEY y acepta ?to= para el destinatario de prueba.
 Route::get('/debug-mail-contact', function (Request $request) {
