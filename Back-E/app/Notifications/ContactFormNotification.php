@@ -7,13 +7,13 @@ use Illuminate\Notifications\Messages\MailMessage;
 
 class ContactFormNotification extends Notification
 {
-    public string $name;
-    public string $email;
-    public ?string $phone;
-    public string $subjectLine;
-    public string $bodyMessage;
+    public $name;
+    public $email;
+    public $phone;
+    public $subjectLine;
+    public $bodyMessage;
 
-    public function __construct(string $name, string $email, ?string $phone, string $subjectLine, string $bodyMessage)
+    public function __construct($name, $email, $phone, $subjectLine, $bodyMessage)
     {
         $this->name = $name;
         $this->email = $email;
