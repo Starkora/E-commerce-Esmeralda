@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -59,13 +60,17 @@ class ContactController extends Controller
         }
 
         try {
-            Mail::to($to)->send(new ContactMessage(
-                $request->input('name'),
-                $request->input('email'),
-                $request->input('phone'),
-                $request->input('subject'),
-                $request->input('message')
-            ));
+            // Enviar usando el mismo mecanismo que login/registro (Notifications)
+            // para garantizar el mismo pipeline de mailer/transport.
+            Notification::route('mail', $to)->notify(
+                new \App\Notifications\ContactFormNotification(
+                    $request->input('name'),
+                    $request->input('email'),
+                    $request->input('phone'),
+                    $request->input('subject'),
+                    $request->input('message')
+                )
+            );
         } catch (\Throwable $e) {
             Log::error('Contact mail send failed', [
                 'message' => $e->getMessage(),

@@ -27,7 +27,7 @@ const Contact: React.FC = () => {
         e.preventDefault();
         setResult(null);
         if (!apiBase) {
-            setResult("No hay API configurada. Define NEXT_PUBLIC_API_BASE_URL.");
+            setResult("No hay API configurada. Define NEXT_PUBLIC_API_URL en Vercel.");
             return;
         }
         if (!form.acceptPolicy) {
