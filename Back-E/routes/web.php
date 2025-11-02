@@ -166,6 +166,90 @@ Route::get('/debug-mail-contact', function (Request $request) {
     }
 });
 
+// Debug del controlador de contacto (misma validación y flujo, pero vía GET con query params)
+// Úsalo sólo temporalmente con DEBUG_KEY. Permite reproducir exactamente lo que envía el Front sin CORS.
+Route::get('/debug-contact-controller', function (Request $request) {
+    if ($request->query('key') !== env('DEBUG_KEY')) {
+        abort(403, 'forbidden');
+    }
+
+    // Simular payload igual al Front
+    $payload = [
+        'name' => $request->query('name'),
+        'email' => $request->query('email'),
+        'phone' => $request->query('phone'),
+        'subject' => $request->query('subject'),
+        'message' => $request->query('message'),
+        'acceptPolicy' => filter_var($request->query('acceptPolicy', true), FILTER_VALIDATE_BOOLEAN),
+        'website' => $request->query('website'), // honeypot
+        'recaptchaToken' => $request->query('recaptchaToken'),
+    ];
+
+    $validator = \Illuminate\Support\Facades\Validator::make($payload, [
+        'name' => ['required','string','max:150'],
+        'email' => ['required','email','max:255'],
+        'phone' => ['nullable','string','max:30'],
+        'subject' => ['required','string','max:150'],
+        'message' => ['required','string','max:5000'],
+        'acceptPolicy' => ['required','boolean'],
+        'website' => ['nullable','max:0'],
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    if (!empty($payload['website'])) {
+        return response()->json(['ok' => true, 'note' => 'honeypot']);
+    }
+
+    // reCAPTCHA opcional
+    $recaptchaSecret = config('services.recaptcha.secret');
+    if ($recaptchaSecret && !empty($payload['recaptchaToken'])) {
+        try {
+            $verify = \App\Support\Recaptcha::verify($payload['recaptchaToken'], $request->ip());
+            if (!($verify['success'] ?? true) || (($verify['score'] ?? 1) < 0.5)) {
+                return response()->json(['message' => 'Verificación reCAPTCHA fallida', 'verify' => $verify], 429);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('reCAPTCHA verification error (debug)', ['message' => $e->getMessage()]);
+        }
+    }
+
+    $to = config('mail.contact_to') ?: env('CONTACT_RECIPIENT') ?: config('mail.from.address');
+    try {
+        \Illuminate\Support\Facades\Notification::route('mail', $to)->notify(
+            new \App\Notifications\ContactFormNotification(
+                $payload['name'],
+                $payload['email'],
+                $payload['phone'],
+                $payload['subject'],
+                $payload['message']
+            )
+        );
+        return response()->json(['ok' => true, 'to' => $to]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'error' => $e->getMessage(),
+            'to' => $to,
+            'mailer' => config('mail.default'),
+            'smtp' => [
+                'host' => config('mail.mailers.'.config('mail.default').'.host'),
+                'port' => config('mail.mailers.'.config('mail.default').'.port'),
+                'encryption' => config('mail.mailers.'.config('mail.default').'.encryption'),
+            ],
+            'payload' => [
+                'name' => $payload['name'],
+                'email' => $payload['email'],
+                'phone' => $payload['phone'],
+                'subject' => $payload['subject'],
+                'message_len' => strlen($payload['message'] ?? ''),
+            ],
+        ], 500);
+    }
+});
+
 // Debug CSRF / Sesión para SPA (solo temporal, proteger con DEBUG_KEY si es necesario)
 Route::get('/debug-csrf', function (Request $request) {
     if (env('DEBUG_KEY') && $request->query('key') !== env('DEBUG_KEY')) {
