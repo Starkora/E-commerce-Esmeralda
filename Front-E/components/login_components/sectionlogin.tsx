@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
+import { getRecaptchaToken } from "@/utils/recaptcha";
 const LoginSection: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -98,6 +99,9 @@ const LoginSection: React.FC = () => {
             const apiBaseUrl = getApiBaseUrl();
             if (!apiBaseUrl) throw new Error('Falta configurar NEXT_PUBLIC_API_URL con la URL del backend');
 
+            // Obtener token reCAPTCHA v3 si está configurado
+            const recaptchaToken = await getRecaptchaToken('login');
+
             // 1. Obtener la cookie CSRF de Sanctum y token explícito
             await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
             const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
@@ -106,7 +110,7 @@ const LoginSection: React.FC = () => {
             // 2. Enviar credenciales al endpoint de login personalizado
             const response = await axios.post(
                 `${apiBaseUrl}/spa-login`,
-                { email, password },
+                { email, password, recaptchaToken },
                 {
                     withCredentials: true,
                     headers: { 

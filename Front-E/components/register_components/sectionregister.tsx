@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from "next/link";
 import toast from 'react-hot-toast';
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
+import { getRecaptchaToken } from "@/utils/recaptcha";
 
 
 const RegisterSection: React.FC = () => {
@@ -43,7 +44,10 @@ const RegisterSection: React.FC = () => {
             const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
             const csrfToken: string = csrfResp?.data?.csrf_token || '';
 
-            // Enviar datos al backend incluyendo phone y password_confirmation
+            // Obtener token reCAPTCHA v3 si está configurado
+            const recaptchaToken = await getRecaptchaToken('register');
+
+            // Enviar datos al backend incluyendo phone, password_confirmation y recaptchaToken
             await axios.post(
                 `${apiBaseUrl}/spa-register`,
                 {
@@ -54,6 +58,7 @@ const RegisterSection: React.FC = () => {
                     phone,
                     password,
                     password_confirmation: confirmPassword,
+                    recaptchaToken,
                 },
                 {
                     withCredentials: true,

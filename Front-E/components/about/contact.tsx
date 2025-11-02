@@ -1,6 +1,58 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 
 const Contact: React.FC = () => {
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+        acceptPolicy: false,
+        website: "", // honeypot
+    });
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState<string | null>(null);
+
+    const apiBase = useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "", []);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value, type, checked } = e.target as any;
+        setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setResult(null);
+        if (!apiBase) {
+            setResult("No hay API configurada. Define NEXT_PUBLIC_API_BASE_URL.");
+            return;
+        }
+        if (!form.acceptPolicy) {
+            setResult("Debes aceptar la política de protección de datos.");
+            return;
+        }
+        if (!form.name || !form.email || !form.subject || !form.message) {
+            setResult("Completa los campos obligatorios.");
+            return;
+        }
+        try {
+            setLoading(true);
+            const res = await fetch(`${apiBase}/api/contact`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data?.message || "Error al enviar");
+            setResult("¡Mensaje enviado! Te responderemos pronto.");
+            setForm({ name: "", email: "", phone: "", subject: "", message: "", acceptPolicy: false, website: "" });
+        } catch (err: any) {
+            setResult(err.message || "No se pudo enviar tu mensaje.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="bg-gray-100">
             {/* Sección de Encabezado con Imagen */}
@@ -40,42 +92,52 @@ const Contact: React.FC = () => {
                 {/* Columna de Formulario de Contacto */}
                 <div className="w-1/2">
                     <p className="mb-4 text-gray-700">Si tienes alguna consulta déjanos tu mensaje y en breve te contestaremos.</p>
-
-                    <form className="bg-gray-50 p-6 rounded-lg shadow-md">
+                    <form className="bg-gray-50 p-6 rounded-lg shadow-md" onSubmit={handleSubmit}>
                         <div className="mb-4">
                             <label className="block text-gray-600 mb-2">Nombre y apellidos</label>
-                            <input type="text" className="w-full px-3 py-2 border rounded-lg" placeholder="Nombre y apellidos" />
+                            <input name="name" value={form.name} onChange={handleChange} type="text" className="w-full px-3 py-2 border rounded-lg" placeholder="Nombre y apellidos" required />
                         </div>
 
                         <div className="mb-4">
                             <label className="block text-gray-600 mb-2">Correo electrónico</label>
-                            <input type="email" className="w-full px-3 py-2 border rounded-lg" placeholder="Correo electrónico" />
+                            <input name="email" value={form.email} onChange={handleChange} type="email" className="w-full px-3 py-2 border rounded-lg" placeholder="Correo electrónico" required />
                         </div>
 
                         <div className="mb-4">
                             <label className="block text-gray-600 mb-2">Teléfono</label>
-                            <input type="tel" className="w-full px-3 py-2 border rounded-lg" placeholder="Teléfono" />
+                            <input name="phone" value={form.phone} onChange={handleChange} type="tel" className="w-full px-3 py-2 border rounded-lg" placeholder="Teléfono" />
                         </div>
 
                         <div className="mb-4">
                             <label className="block text-gray-600 mb-2">Asunto</label>
-                            <input type="text" className="w-full px-3 py-2 border rounded-lg" placeholder="Asunto" />
+                            <input name="subject" value={form.subject} onChange={handleChange} type="text" className="w-full px-3 py-2 border rounded-lg" placeholder="Asunto" required />
                         </div>
 
                         <div className="mb-4">
                             <label className="block text-gray-600 mb-2">Mensaje</label>
-                            <textarea className="w-full px-3 py-2 border rounded-lg" placeholder="Escribe tu mensaje aquí..." rows={4}></textarea>
+                            <textarea name="message" value={form.message} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" placeholder="Escribe tu mensaje aquí..." rows={4} required></textarea>
                         </div>
 
                         <div className="flex items-center mb-4">
-                            <input type="checkbox" id="privacyPolicy" className="mr-2" />
+                            <input name="acceptPolicy" checked={form.acceptPolicy} onChange={handleChange} type="checkbox" id="privacyPolicy" className="mr-2" />
                             <label htmlFor="privacyPolicy" className="text-gray-600">
                                 He leído y acepto la <a href="#" className="text-blue-500 underline">política de protección de datos personales</a>.
                             </label>
                         </div>
 
-                        <button type="submit" className="w-full bg-black text-white py-2 rounded-lg hover:bg-emerald-400">
-                            Enviar
+                        {/* Honeypot (oculto para personas, visible para bots) */}
+                        <div className="hidden" aria-hidden>
+                            <label>Tu sitio web</label>
+                            <input name="website" value={form.website} onChange={handleChange} tabIndex={-1} autoComplete="off" />
+                        </div>
+
+                        {result && (
+                            <div className={`mb-3 text-sm ${result.includes('¡Mensaje enviado!') ? 'text-green-600' : 'text-red-600'}`}>
+                                {result}
+                            </div>
+                        )}
+                        <button type="submit" disabled={loading} className="w-full bg-black text-white py-2 rounded-lg hover:bg-emerald-400 disabled:opacity-60">
+                            {loading ? 'Enviando...' : 'Enviar'}
                         </button>
                     </form>
                 </div>

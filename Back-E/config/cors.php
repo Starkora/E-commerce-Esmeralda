@@ -22,7 +22,7 @@ return [
     'allowed_methods' => ['*'],
 
     // Allow configuring origins via env. Comma-separated list, e.g. "https://foo.app,https://bar.app"
-    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', 'https://e-commerce-esmeralda.vercel.app')),
+    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', 'https://e-commerce-esmeralda.vercel.app,http://localhost:3000,https://localhost:3000')),
     'allowed_origin_patterns' => [],
 
     'allowed_headers' => ['*'],

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use App\Support\Recaptcha;
 use Illuminate\Auth\Events\Verified;
 use App\Actions\Fortify\CreateNewUser as CreateNewUserAction;
 
@@ -24,6 +25,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 // Endpoint SPA para login que exige correo verificado
 Route::post('/spa-login', function (Request $request) {
+    // reCAPTCHA v3 (opcional si está configurado)
+    $verify = Recaptcha::verify($request->input('recaptchaToken'), $request->ip());
+    if (!($verify['success'] ?? true)) {
+        return response()->json(['message' => 'Verificación reCAPTCHA fallida'], 429);
+    }
     $input = $request->all();
     $user = \App\Models\User::where('email', $input['email'] ?? '')->first();
     if (! $user || ! \Illuminate\Support\Facades\Hash::check($input['password'] ?? '', $user->password)) {

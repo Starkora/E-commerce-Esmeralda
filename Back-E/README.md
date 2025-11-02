@@ -64,3 +64,24 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Endpoint de Contacto (API)
+
+Se agregó un endpoint `POST /api/contact` para recibir el formulario desde el front. Incluye:
+
+- Validación de campos y honeypot (`website`) como protección anti‑spam.
+- Rate limiting (`throttle:5,1`).
+- Verificación opcional de reCAPTCHA v3 si configuras las llaves.
+
+Variables de entorno útiles:
+
+```
+CONTACT_RECIPIENT=tu-correo@dominio.com
+CORS_ALLOWED_ORIGINS=https://e-commerce-esmeralda.vercel.app,http://localhost:3000
+
+# Opcional reCAPTCHA v3
+RECAPTCHA_SITE_KEY=xxxxx
+RECAPTCHA_SECRET_KEY=xxxxx
+```
+
+Configura además el transporte de correo (`MAIL_*`) para que el envío funcione en producción.

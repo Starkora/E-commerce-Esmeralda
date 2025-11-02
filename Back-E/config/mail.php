@@ -120,4 +120,7 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    // Recipient for contact form. Configure CONTACT_RECIPIENT in .env
+    'contact_to' => env('CONTACT_RECIPIENT', null),
+
 ];

@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Support\Recaptcha;
+use App\Http\Controllers\Api\ContactController;
 
 // ✅ Obtener usuario autenticado (protegido por Sanctum)
 Route::get('/user', function (Request $request) {
@@ -15,6 +17,11 @@ Route::get('/user', function (Request $request) {
 // ✅ Registro SPA-friendly
 Route::post('/spa-register', function (Request $request) {
     try {
+        // reCAPTCHA v3 (opcional si está configurado)
+        $verify = Recaptcha::verify($request->input('recaptchaToken'), $request->ip());
+        if (!($verify['success'] ?? true)) {
+            return response()->json(['message' => 'Verificación reCAPTCHA fallida'], 429);
+        }
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
@@ -53,3 +60,7 @@ Route::post('/spa-register', function (Request $request) {
         ], 500);
     }
 });
+
+// ✅ Contact form endpoint (throttled)
+Route::post('/contact', [ContactController::class, 'send'])
+    ->middleware('throttle:5,1');
