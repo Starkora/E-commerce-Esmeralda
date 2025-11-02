@@ -8,6 +8,7 @@ return [
         'register',
         'spa-register',
     'spa-login',
+    'spa-logout',
     'spa-forgot-password',
     'spa-reset-password',
         'sanctum/csrf-cookie',

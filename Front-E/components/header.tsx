@@ -4,6 +4,7 @@ import Image from 'next/image';
 import AnnouncementBar from './AnnouncementBar';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 
 const Header: React.FC = () => {
     const [isSearchActive, setIsSearchActive] = useState(false);
@@ -15,8 +16,14 @@ const Header: React.FC = () => {
         const fetchUser = async () => {
             try {
                 const axios = (await import('axios')).default;
-                const response = await axios.get('/api/user', { withCredentials: true });
-                setUser({ name: response.data.name });
+                const apiBaseUrl = getApiBaseUrl();
+                if (!apiBaseUrl) return;
+                const response = await axios.get(`${apiBaseUrl}/user`, { withCredentials: true, headers: { 'Accept': 'application/json' } });
+                if (response?.data?.name) {
+                    setUser({ name: response.data.name });
+                } else {
+                    setUser(null);
+                }
             } catch (e) {
                 setUser(null);
             }
@@ -38,7 +45,10 @@ const Header: React.FC = () => {
     const handleLogout = async () => {
         try {
             const axios = (await import('axios')).default;
-            await axios.post('/api/logout', {}, { withCredentials: true });
+            const apiBaseUrl = getApiBaseUrl();
+            if (apiBaseUrl) {
+                await axios.post(`${apiBaseUrl}/spa-logout`, {}, { withCredentials: true, headers: { 'Accept': 'application/json' } });
+            }
         } catch (e) {}
         setUser(null);
         const toast = (await import('react-hot-toast')).default;

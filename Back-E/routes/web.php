@@ -40,6 +40,19 @@ Route::post('/spa-login', function (Request $request) {
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
 ]);
 
+// SPA logout endpoint: invalida la sesión del usuario autenticado
+Route::post('/spa-logout', function (Request $request) {
+    try {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+    } catch (\Throwable $e) {}
+    return response()->json(['message' => 'Logout exitoso']);
+})->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
+
 // Debug puntual de correo (proteger con DEBUG_KEY). Úsalo solo temporalmente.
 Route::get('/debug-mail', function (Request $request) {
     if ($request->query('key') !== env('DEBUG_KEY')) {
