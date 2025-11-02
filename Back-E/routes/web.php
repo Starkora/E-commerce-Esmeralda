@@ -405,6 +405,21 @@ Route::post('/email/verification-notification-public', function (Request $reques
       \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
   ]);
 
+// Test RAW email - sin notificaciones
+Route::post('/test-raw-mail', function (Request $request) {
+    $to = env('CONTACT_RECIPIENT', config('mail.from.address'));
+    
+    \Illuminate\Support\Facades\Mail::raw('Test de correo crudo desde Laravel', function ($message) use ($to) {
+        $message->to($to)->subject('Test Raw Mail');
+    });
+    
+    return response()->json(['ok' => true, 'sent_to' => $to, 'method' => 'Mail::raw']);
+})->middleware('throttle:5,1')
+  ->withoutMiddleware([
+      \App\Http\Middleware\VerifyCsrfToken::class,
+      \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+  ]);
+
 // Test simple contact - replica exacta del patrón de forgot-password
 Route::post('/test-simple-contact', function (Request $request) {
     $request->validate([

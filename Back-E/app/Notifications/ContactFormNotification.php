@@ -29,23 +29,14 @@ class ContactFormNotification extends Notification
 
     public function toMail($notifiable)
     {
-        // Usar el patrón estándar de MailMessage (como CustomResetPasswordNotification)
-        // SIN vista personalizada para evitar problemas
-        $message = (new MailMessage)
+        // Patrón MÍNIMO idéntico a CustomResetPasswordNotification
+        return (new MailMessage)
             ->subject('[Contacto] ' . $this->subjectLine)
-            ->greeting('Nuevo mensaje de contacto')
-            ->line('**Nombre:** ' . $this->name)
-            ->line('**Correo:** ' . $this->email);
-        
-        if ($this->phone) {
-            $message->line('**Teléfono:** ' . $this->phone);
-        }
-        
-        $message->line('**Asunto:** ' . $this->subjectLine)
-                ->line('**Mensaje:**')
-                ->line($this->bodyMessage)
-                ->salutation('Saludos, ' . config('app.name'));
-
-        return $message;
+            ->line('Nombre: ' . $this->name)
+            ->line('Email: ' . $this->email)
+            ->line('Teléfono: ' . ($this->phone ?? 'N/A'))
+            ->line('Asunto: ' . $this->subjectLine)
+            ->line('Mensaje:')
+            ->line($this->bodyMessage);
     }
 }
