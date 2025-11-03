@@ -42,6 +42,8 @@ Route::post('/spa-login', function (Request $request) {
         return response()->json(['message' => 'Tu correo no está verificado'], 403);
     }
     \Illuminate\Support\Facades\Auth::login($user);
+    // Emitimos un token de acceso para evitar problemas de cookies cross-site
+    $token = $user->createToken('spa')->plainTextToken;
     return response()->json([
         'message' => 'Login exitoso',
         // Devolvemos un objeto de usuario más completo para que el frontend pueda
@@ -54,6 +56,7 @@ Route::post('/spa-login', function (Request $request) {
             'last_name' => $user->last_name,
             'phone' => $user->phone,
         ],
+        'token' => $token,
     ]);
 })
 ->withoutMiddleware([
@@ -64,6 +67,11 @@ Route::post('/spa-login', function (Request $request) {
 // SPA logout endpoint: invalida la sesión del usuario autenticado
 Route::post('/spa-logout', function (Request $request) {
     try {
+        // Si viene un bearer token válido (Sanctum), revocarlo
+        if ($request->user('sanctum')) {
+            $token = $request->user('sanctum')->currentAccessToken();
+            if ($token) { $token->delete(); }
+        }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

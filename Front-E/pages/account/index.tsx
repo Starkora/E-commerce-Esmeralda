@@ -50,7 +50,10 @@ export default function AccountHome() {
     await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
     const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
     const csrfToken: string = (csrfResp as any)?.data?.csrf_token || '';
-    return { axios, apiBaseUrl, csrfToken };
+    // Leer token Bearer si existe (fallback a cookies en caso contrario)
+    let token: string | null = null;
+    try { token = localStorage.getItem('ee_token'); } catch {}
+    return { axios, apiBaseUrl, csrfToken, token } as const;
   };
 
   const onRequestProfileChange = async (e: React.FormEvent) => {
@@ -70,11 +73,11 @@ export default function AccountHome() {
       return;
     }
     try {
-      const { axios, apiBaseUrl, csrfToken } = await getCsrf();
+      const { axios, apiBaseUrl, csrfToken, token } = await getCsrf();
       const res = await axios.post(
         `${apiBaseUrl}${API.requestProfileChange}`,
         { _token: csrfToken, ...changes },
-        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' } }
+        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
       );
       const reqId = (res as any)?.data?.request_id || null;
       setRequestId(reqId);
@@ -96,11 +99,11 @@ export default function AccountHome() {
     payload.email = (email || '').trim();
     payload.phone = (phone || '').trim();
     try {
-      const { axios, apiBaseUrl, csrfToken } = await getCsrf();
+      const { axios, apiBaseUrl, csrfToken, token } = await getCsrf();
       const res = await axios.post(
         `${apiBaseUrl}${API.confirmProfileChange}`,
         { _token: csrfToken, ...payload },
-        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' } }
+        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
       );
       const updatedUser = (res as any)?.data?.user || {
         ...user,
@@ -126,11 +129,11 @@ export default function AccountHome() {
     if (newPassword.length < 8) return toast.error('La nueva contraseña debe tener al menos 8 caracteres');
     if (newPassword !== confirmPassword) return toast.error('Las contraseñas no coinciden');
     try {
-      const { axios, apiBaseUrl, csrfToken } = await getCsrf();
+      const { axios, apiBaseUrl, csrfToken, token } = await getCsrf();
       const res = await axios.post(
         `${apiBaseUrl}${API.requestPasswordChange}`,
         { _token: csrfToken, current_password: currentPassword, password: newPassword, password_confirmation: confirmPassword },
-        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' } }
+        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
       );
       const reqId = (res as any)?.data?.request_id || null;
       setPassRequestId(reqId);
@@ -146,7 +149,7 @@ export default function AccountHome() {
     e?.preventDefault();
     if (!passCode.trim()) return toast.error('Ingresa el código de verificación');
     try {
-      const { axios, apiBaseUrl, csrfToken } = await getCsrf();
+      const { axios, apiBaseUrl, csrfToken, token } = await getCsrf();
       await axios.post(
         `${apiBaseUrl}${API.confirmPasswordChange}`,
         {
@@ -157,7 +160,7 @@ export default function AccountHome() {
           password: newPassword,
           password_confirmation: confirmPassword,
         },
-        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' } }
+        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
       );
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword(''); setPassCode(''); setPassRequestId(null); setPassVerifying(false);
       toast.success('Contraseña cambiada');

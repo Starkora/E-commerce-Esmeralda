@@ -76,12 +76,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const axios = (await import('axios')).default;
       const apiBaseUrl = getApiBaseUrl();
       if (apiBaseUrl) {
-        await axios.post(`${apiBaseUrl}/spa-logout`, {}, { withCredentials: true, headers: { Accept: 'application/json' } });
+        // Enviar bearer si existe para revocar el token en backend
+        let token: string | null = null;
+        try { token = localStorage.getItem('ee_token'); } catch {}
+        await axios.post(
+          `${apiBaseUrl}/spa-logout`,
+          {},
+          { withCredentials: true, headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
+        );
       }
     } catch {}
     setUser(null);
     if (typeof window !== 'undefined') {
       try { localStorage.removeItem('ee_user'); } catch {}
+      try { localStorage.removeItem('ee_token'); } catch {}
       try { window.dispatchEvent(new Event('logout')); } catch {}
     }
   };

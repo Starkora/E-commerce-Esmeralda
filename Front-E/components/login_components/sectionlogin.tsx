@@ -132,7 +132,8 @@ const LoginSection: React.FC = () => {
             );
 
             toast.success('Inicio de sesión exitoso', { duration: 3000 });
-            const raw = (response && (response as any).data && (response as any).data.user) || null;
+            const data: any = (response && (response as any).data) || {};
+            const raw = data.user || null;
             const user = raw ? {
                 id: raw.id,
                 name: raw.name,
@@ -140,6 +141,8 @@ const LoginSection: React.FC = () => {
                 lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? raw.apellidos ?? undefined,
                 phone: raw.phone ?? raw.telefono ?? raw.celular ?? raw.mobile ?? undefined,
             } : null;
+            // Guardar token para llamadas autenticadas (fallback a cookies)
+            try { if (data.token) localStorage.setItem('ee_token', data.token); } catch {}
             // Guardar usuario en el contexto (y localStorage) para persistencia inmediata
             try { setAuthUser(user as any); } catch {}
             // Mantener compatibilidad con el evento existente (normalizado)
