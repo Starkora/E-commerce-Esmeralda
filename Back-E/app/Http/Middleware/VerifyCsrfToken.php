@@ -22,5 +22,10 @@ class VerifyCsrfToken extends Middleware
         // Replicamos la excepción temporal para recuperación de contraseña
         'spa-forgot-password',
         'spa-reset-password',
+        // Cambios de perfil y contraseña (SPA)
+        'spa-profile-change-request',
+        'spa-profile-change-confirm',
+        'spa-password-change-request',
+        'spa-password-change-confirm',
     ];
 }

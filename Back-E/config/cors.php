@@ -11,6 +11,11 @@ return [
     'spa-logout',
     'spa-forgot-password',
     'spa-reset-password',
+    // Perfil y contraseña (SPA)
+    'spa-profile-change-request',
+    'spa-profile-change-confirm',
+    'spa-password-change-request',
+    'spa-password-change-confirm',
         'sanctum/csrf-cookie',
         'csrf-token',
         'forgot-password',

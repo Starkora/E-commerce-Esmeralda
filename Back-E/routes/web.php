@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\URL;
 use App\Support\Recaptcha;
 use Illuminate\Auth\Events\Verified;
 use App\Actions\Fortify\CreateNewUser as CreateNewUserAction;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 
 // Ruta para obtener el usuario logueado (SPA) SOLO si está verificado
@@ -67,6 +70,145 @@ Route::post('/spa-logout', function (Request $request) {
     } catch (\Throwable $e) {}
     return response()->json(['message' => 'Logout exitoso']);
 })->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
+
+// === Perfil: solicitud de código para confirmar cambios ===
+Route::post('/spa-profile-change-request', function (Request $request) {
+    $user = $request->user();
+    if (! $user) {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    }
+
+    $changes = [
+        'name' => $request->input('name'),
+        'last_name' => $request->input('last_name'),
+        'email' => $request->input('email'),
+        'phone' => $request->input('phone'),
+    ];
+
+    // Generar código y request_id, guardar en caché por 10 minutos
+    $code = (string) random_int(100000, 999999);
+    $requestId = (string) Str::uuid();
+    Cache::put("profile_change:{$requestId}", [
+        'user_id' => $user->id,
+        'changes' => $changes,
+        'code' => $code,
+    ], now()->addMinutes(10));
+
+    // Enviar correo con el código (simple)
+    try {
+        Mail::raw("Tu código para confirmar cambios de perfil es: {$code}", function ($m) use ($user) {
+            $m->to($user->email)->subject('Código de verificación de perfil');
+        });
+    } catch (\Throwable $e) {
+        Log::warning('No se pudo enviar el código de perfil', ['error' => $e->getMessage()]);
+    }
+
+    return response()->json(['message' => 'Código enviado', 'request_id' => $requestId]);
+})->middleware('auth:sanctum')->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
+
+// === Perfil: confirmación con código y aplicación de cambios ===
+Route::post('/spa-profile-change-confirm', function (Request $request) {
+    $user = $request->user();
+    if (! $user) {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    }
+    $requestId = $request->input('request_id');
+    $code = trim((string) $request->input('code'));
+    $cached = $requestId ? Cache::get("profile_change:{$requestId}") : null;
+    if (! $cached || ($cached['user_id'] ?? null) !== $user->id || ($cached['code'] ?? '') !== $code) {
+        return response()->json(['message' => 'Código inválido o expirado'], 422);
+    }
+
+    $changes = $cached['changes'] ?? [];
+    $dirty = [];
+    foreach (['name','last_name','email','phone'] as $k) {
+        $val = $request->input($k, $changes[$k] ?? null);
+        if ($val !== null && $val !== $user->{$k}) {
+            $dirty[$k] = $val;
+        }
+    }
+    if (! empty($dirty)) {
+        $user->fill($dirty);
+        $user->save();
+    }
+    Cache::forget("profile_change:{$requestId}");
+
+    return response()->json(['message' => 'Perfil actualizado', 'user' => [
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'last_name' => $user->last_name,
+        'phone' => $user->phone,
+    ]]);
+})->middleware('auth:sanctum')->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
+
+// === Password: solicitud de código para cambio de contraseña ===
+Route::post('/spa-password-change-request', function (Request $request) {
+    $user = $request->user();
+    if (! $user) {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    }
+    $current = (string) $request->input('current_password');
+    $new = (string) $request->input('password');
+    $confirm = (string) $request->input('password_confirmation');
+    if (! Hash::check($current, $user->password)) {
+        return response()->json(['message' => 'Contraseña actual incorrecta'], 422);
+    }
+    if ($new === '' || $new !== $confirm) {
+        return response()->json(['message' => 'La confirmación no coincide'], 422);
+    }
+
+    $code = (string) random_int(100000, 999999);
+    $requestId = (string) Str::uuid();
+    Cache::put("password_change:{$requestId}", [
+        'user_id' => $user->id,
+        'new' => $new,
+        'code' => $code,
+    ], now()->addMinutes(10));
+
+    try {
+        Mail::raw("Tu código para cambiar la contraseña es: {$code}", function ($m) use ($user) {
+            $m->to($user->email)->subject('Código de cambio de contraseña');
+        });
+    } catch (\Throwable $e) {
+        Log::warning('No se pudo enviar el código de password', ['error' => $e->getMessage()]);
+    }
+
+    return response()->json(['message' => 'Código enviado', 'request_id' => $requestId]);
+})->middleware('auth:sanctum')->withoutMiddleware([
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
+
+// === Password: confirmación con código ===
+Route::post('/spa-password-change-confirm', function (Request $request) {
+    $user = $request->user();
+    if (! $user) {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    }
+    $requestId = $request->input('request_id');
+    $code = trim((string) $request->input('code'));
+    $cached = $requestId ? Cache::get("password_change:{$requestId}") : null;
+    if (! $cached || ($cached['user_id'] ?? null) !== $user->id || ($cached['code'] ?? '') !== $code) {
+        return response()->json(['message' => 'Código inválido o expirado'], 422);
+    }
+
+    $new = (string) ($cached['new'] ?? '');
+    $user->password = $new; // cast 'hashed' en el modelo hará el hash
+    $user->save();
+    Cache::forget("password_change:{$requestId}");
+
+    return response()->json(['message' => 'Contraseña actualizada']);
+})->middleware('auth:sanctum')->withoutMiddleware([
     \App\Http\Middleware\VerifyCsrfToken::class,
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
 ]);
