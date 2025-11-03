@@ -21,3 +21,7 @@ export { default as MobileMenu } from './MobileMenu';
 export { default as MegaMenu } from './MegaMenu';
 export { default as Newsletter } from './Newsletter';
 export { default as CartBadge } from './CartBadge';
+export { default as CategoryCard } from './CategoryCard';
+export { default as TrustBadges } from './TrustBadges';
+export { default as Testimonials } from './Testimonials';
+export { default as InstagramFeed } from './InstagramFeed';
