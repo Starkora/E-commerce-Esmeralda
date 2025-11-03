@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { FaWhatsapp, FaFacebook, FaInstagram, FaCreditCard, FaUniversity, FaMobileAlt } from 'react-icons/fa';
+import { FaWhatsapp, FaFacebook, FaInstagram, FaCreditCard, FaUniversity, FaMobileAlt, FaQuestionCircle, FaComments, FaTruck, FaClipboardList } from 'react-icons/fa';
 import { SiVisa, SiMastercard } from 'react-icons/si';
 import Image from 'next/image';
 
@@ -32,22 +32,22 @@ const Footer: React.FC = () => {
                         <ul className="space-y-3">
                             <li>
                                 <Link href="/help-center" className="text-gray-300 hover:text-emerald-400 transition-colors flex items-center gap-2">
-                                    📋 Centro de Ayuda
+                                    <FaClipboardList className="text-emerald-500" /> Centro de Ayuda
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/whatsapp-support" className="text-gray-300 hover:text-emerald-400 transition-colors flex items-center gap-2">
-                                    💬 Atención por WhatsApp
+                                    <FaComments className="text-emerald-500" /> Atención por WhatsApp
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/delivery-types" className="text-gray-300 hover:text-emerald-400 transition-colors flex items-center gap-2">
-                                    🚚 Tipos de Entrega
+                                    <FaTruck className="text-emerald-500" /> Tipos de Entrega
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/faq" className="text-gray-300 hover:text-emerald-400 transition-colors flex items-center gap-2">
-                                    ❓ Preguntas Frecuentes
+                                    <FaQuestionCircle className="text-emerald-500" /> Preguntas Frecuentes
                                 </Link>
                             </li>
                         </ul>

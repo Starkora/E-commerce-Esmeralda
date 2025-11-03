@@ -93,7 +93,7 @@ const Header: React.FC = () => {
     ];
 
     return (
-        <header className={`bg-white sticky top-0 z-50 transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : 'border-b-2'}`}>
+        <header className={`bg-black sticky top-0 z-50 transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : 'border-b-2'}`}>
             <div className="bg-black text-white text-center py-1">
                 <AnnouncementBar message='🎉 DESCUENTO DEL 20% EN TODOS LOS PRODUCTOS 🎉' />
             </div>
