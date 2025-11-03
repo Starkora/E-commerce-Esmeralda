@@ -67,8 +67,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setUser(u);
         try { localStorage.setItem('ee_user', JSON.stringify(u)); } catch {}
+      } else {
+        // Si no vino usuario válido, asumimos no autenticado
+        setUser(null);
+        try { localStorage.removeItem('ee_user'); } catch {}
+        try { localStorage.removeItem('ee_token'); } catch {}
       }
-    } catch {}
+    } catch (err: any) {
+      // Si el backend responde 401/403/419, limpiar estado y storage para no mostrar sesión fantasma
+      const status = err?.response?.status;
+      if (status === 401 || status === 403 || status === 419) {
+        setUser(null);
+        try { localStorage.removeItem('ee_user'); } catch {}
+        try { localStorage.removeItem('ee_token'); } catch {}
+      }
+    }
   };
 
   const logout = async () => {
