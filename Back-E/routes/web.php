@@ -91,37 +91,46 @@ Route::post('/spa-logout', function (Request $request) {
 
 // === Perfil: solicitud de código para confirmar cambios ===
 Route::post('/spa-profile-change-request', function (Request $request) {
-    $user = $request->user();
-    if (! $user) {
-        return response()->json(['message' => 'Unauthenticated.'], 401);
-    }
-
-    $changes = [
-        'name' => $request->input('name'),
-        'last_name' => $request->input('last_name'),
-        'email' => $request->input('email'),
-        'phone' => $request->input('phone'),
-    ];
-
-    // Generar código y request_id, guardar en caché por 10 minutos
-    $code = (string) random_int(100000, 999999);
-    $requestId = (string) Str::uuid();
-    Cache::put("profile_change:{$requestId}", [
-        'user_id' => $user->id,
-        'changes' => $changes,
-        'code' => $code,
-    ], now()->addMinutes(10));
-
-    // Enviar correo con el código (simple)
     try {
-        Mail::raw("Tu código para confirmar cambios de perfil es: {$code}", function ($m) use ($user) {
-            $m->to($user->email)->subject('Código de verificación de perfil');
-        });
-    } catch (\Throwable $e) {
-        Log::warning('No se pudo enviar el código de perfil', ['error' => $e->getMessage()]);
-    }
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
 
-    return response()->json(['message' => 'Código enviado', 'request_id' => $requestId]);
+        $changes = [
+            'name' => $request->input('name'),
+            'last_name' => $request->input('last_name'),
+            'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
+        ];
+
+        // Generar código y request_id, guardar en caché por 10 minutos
+        $code = (string) random_int(100000, 999999);
+        $requestId = (string) Str::uuid();
+        Cache::put("profile_change:{$requestId}", [
+            'user_id' => $user->id,
+            'changes' => $changes,
+            'code' => $code,
+        ], now()->addMinutes(10));
+
+        // Enviar correo con el código (simple)
+        try {
+            Mail::raw("Tu código para confirmar cambios de perfil es: {$code}", function ($m) use ($user) {
+                $m->to($user->email)->subject('Código de verificación de perfil');
+            });
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo enviar el código de perfil', ['error' => $e->getMessage()]);
+        }
+
+        return response()->json(['message' => 'Código enviado', 'request_id' => $requestId]);
+    } catch (\Throwable $e) {
+        Log::error('spa-profile-change-request error', [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+        return response()->json(['message' => 'Error interno al iniciar la verificación'], 500);
+    }
 })->middleware('auth:sanctum')->withoutMiddleware([
     \App\Http\Middleware\VerifyCsrfToken::class,
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
@@ -129,38 +138,47 @@ Route::post('/spa-profile-change-request', function (Request $request) {
 
 // === Perfil: confirmación con código y aplicación de cambios ===
 Route::post('/spa-profile-change-confirm', function (Request $request) {
-    $user = $request->user();
-    if (! $user) {
-        return response()->json(['message' => 'Unauthenticated.'], 401);
-    }
-    $requestId = $request->input('request_id');
-    $code = trim((string) $request->input('code'));
-    $cached = $requestId ? Cache::get("profile_change:{$requestId}") : null;
-    if (! $cached || ($cached['user_id'] ?? null) !== $user->id || ($cached['code'] ?? '') !== $code) {
-        return response()->json(['message' => 'Código inválido o expirado'], 422);
-    }
-
-    $changes = $cached['changes'] ?? [];
-    $dirty = [];
-    foreach (['name','last_name','email','phone'] as $k) {
-        $val = $request->input($k, $changes[$k] ?? null);
-        if ($val !== null && $val !== $user->{$k}) {
-            $dirty[$k] = $val;
+    try {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
         }
-    }
-    if (! empty($dirty)) {
-        $user->fill($dirty);
-        $user->save();
-    }
-    Cache::forget("profile_change:{$requestId}");
+        $requestId = $request->input('request_id');
+        $code = trim((string) $request->input('code'));
+        $cached = $requestId ? Cache::get("profile_change:{$requestId}") : null;
+        if (! $cached || ($cached['user_id'] ?? null) !== $user->id || ($cached['code'] ?? '') !== $code) {
+            return response()->json(['message' => 'Código inválido o expirado'], 422);
+        }
 
-    return response()->json(['message' => 'Perfil actualizado', 'user' => [
-        'id' => $user->id,
-        'name' => $user->name,
-        'email' => $user->email,
-        'last_name' => $user->last_name,
-        'phone' => $user->phone,
-    ]]);
+        $changes = $cached['changes'] ?? [];
+        $dirty = [];
+        foreach (['name','last_name','email','phone'] as $k) {
+            $val = $request->input($k, $changes[$k] ?? null);
+            if ($val !== null && $val !== $user->{$k}) {
+                $dirty[$k] = $val;
+            }
+        }
+        if (! empty($dirty)) {
+            $user->fill($dirty);
+            $user->save();
+        }
+        Cache::forget("profile_change:{$requestId}");
+
+        return response()->json(['message' => 'Perfil actualizado', 'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'last_name' => $user->last_name,
+            'phone' => $user->phone,
+        ]]);
+    } catch (\Throwable $e) {
+        Log::error('spa-profile-change-confirm error', [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+        return response()->json(['message' => 'Error interno al confirmar la verificación'], 500);
+    }
 })->middleware('auth:sanctum')->withoutMiddleware([
     \App\Http\Middleware\VerifyCsrfToken::class,
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
