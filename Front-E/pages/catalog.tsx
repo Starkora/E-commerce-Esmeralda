@@ -181,7 +181,6 @@ const CatalogPage: React.FC = () => {
     ];
   }, [statistics]);
 
-  
   const filteredProducts = products;
 
   const handleAddToCart = (id: string | number) => {
