@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaStar, FaHeart, FaShoppingCart, FaEye } from 'react-icons/fa';
+import { useCart } from '@/context/CartContext';
 
 interface CatalogProductCardProps {
   id: string | number;
@@ -34,10 +35,21 @@ const CatalogProductCard: React.FC<CatalogProductCardProps> = ({
   isFavorite = false,
   className = '',
 }) => {
+  const { addToCart } = useCart();
+  
   // Debug: verificar URL de imagen 
   if (process.env.NODE_ENV === 'development') {
     console.log(`Product ${name} imageUrl:`, imageUrl);
   }
+
+  const handleAddToCart = () => {
+    if (onAddToCart) {
+      onAddToCart(id);
+    } else {
+      // Use cart context
+      addToCart(Number(id), 1);
+    }
+  };
   
   const discount = oldPrice ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
 
@@ -164,9 +176,9 @@ const CatalogProductCard: React.FC<CatalogProductCardProps> = ({
         </div>
 
         {/* Add to Cart Button */}
-        {onAddToCart && inStock && (
+        {inStock && (
           <button
-            onClick={() => onAddToCart(id)}
+            onClick={handleAddToCart}
             className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
           >
             <FaShoppingCart />

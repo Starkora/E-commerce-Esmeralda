@@ -5,6 +5,7 @@ import AnnouncementBar from './AnnouncementBar';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import AccountMenu from './AccountMenu';
 
 const Header: React.FC = () => {
@@ -16,6 +17,7 @@ const Header: React.FC = () => {
     const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { user, logout } = useAuth();
+    const { cart, toggleCart } = useCart();
     const router = useRouter();
 
     // Redirigir al formulario de login
@@ -211,12 +213,18 @@ const Header: React.FC = () => {
                             </button>
                         )}
 
-                        <Link href="/cart" className="relative hover:text-emerald-400 transition-colors">
+                        <button 
+                            onClick={toggleCart}
+                            className="relative hover:text-emerald-400 transition-colors"
+                            aria-label="Abrir carrito"
+                        >
                             <FaShoppingCart className="text-xl" />
-                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                                0
-                            </span>
-                        </Link>
+                            {cart && cart.total_items > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold animate-bounce">
+                                    {cart.total_items}
+                                </span>
+                            )}
+                        </button>
 
                         <Link href="/delivery-types" className="hidden md:block hover:text-emerald-400 transition-colors">
                             <FaTruck className="text-xl" />

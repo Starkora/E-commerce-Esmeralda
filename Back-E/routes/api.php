@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\StoreController;
+use App\Http\Controllers\Api\CartController;
 
 // ✅ Health check & Database diagnostic endpoint
 Route::get('/health', function () {
@@ -123,4 +124,13 @@ Route::prefix('stores')->group(function () {
     Route::get('/statistics', [StoreController::class, 'statistics']); // Store stats
     Route::get('/nearest', [StoreController::class, 'nearest']); // Find nearest store
     Route::get('/{id}', [StoreController::class, 'show']); // Get single store
+});
+
+// ===== Cart Routes =====
+Route::prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'index']); // Get cart
+    Route::post('/items', [CartController::class, 'addItem']); // Add item to cart
+    Route::put('/items/{id}', [CartController::class, 'updateItem']); // Update item quantity
+    Route::delete('/items/{id}', [CartController::class, 'removeItem']); // Remove item
+    Route::delete('/clear', [CartController::class, 'clear']); // Clear cart
 });
