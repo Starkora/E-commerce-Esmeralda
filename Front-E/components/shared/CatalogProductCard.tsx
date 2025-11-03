@@ -58,7 +58,7 @@ const CatalogProductCard: React.FC<CatalogProductCardProps> = ({
       `}
     >
       {/* Image Container */}
-      <div className="relative aspect-square overflow-hidden bg-gray-200">
+      <div className="relative h-64 w-full overflow-hidden bg-gray-200">
         {imageUrl ? (
           <img
             src={imageUrl}
