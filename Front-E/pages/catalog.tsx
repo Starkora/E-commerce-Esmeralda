@@ -159,21 +159,21 @@ const CatalogPage: React.FC = () => {
     return [
       {
         icon: <FaShoppingBag />,
-        number: `${statistics.total_products}`,
+        number: `${statistics.total_products || 0}`,
         label: 'Productos disponibles',
         color: 'emerald' as const,
         variant: 'default' as const,
       },
       {
         icon: <FaTags />,
-        number: `${Math.round(statistics.average_discount)}%`,
+        number: `${Math.round(statistics.average_discount || 0)}%`,
         label: 'Descuentos promedio',
         color: 'orange' as const,
         variant: 'default' as const,
       },
       {
         icon: <FaStar />,
-        number: `${statistics.average_rating.toFixed(1)}/5`,
+        number: `${(Number(statistics.average_rating) || 0).toFixed(1)}/5`,
         label: 'Calificación promedio',
         color: 'blue' as const,
         variant: 'default' as const,
