@@ -50,13 +50,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         withCredentials: true,
         headers: { Accept: 'application/json' },
       });
-      if (res?.data?.name) {
+      // Normalizar distintas formas de respuesta del backend
+      const raw = (res as any)?.data?.user 
+        || (res as any)?.data?.data?.user 
+        || (res as any)?.data?.data 
+        || (res as any)?.data 
+        || null;
+
+      if (raw && (raw.name || raw.email)) {
         const u: User = {
-          id: res.data.id,
-          name: res.data.name,
-          email: res.data.email,
-          lastName: res.data.last_name || res.data.lastname || res.data.apellido || undefined,
-          phone: res.data.phone || res.data.telefono || undefined,
+          id: raw.id,
+          name: raw.name,
+          email: raw.email,
+          lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? undefined,
+          phone: raw.phone ?? raw.telefono ?? undefined,
         };
         setUser(u);
         try { localStorage.setItem('ee_user', JSON.stringify(u)); } catch {}
