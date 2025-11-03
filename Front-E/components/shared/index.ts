@@ -14,3 +14,6 @@ export { default as FeatureGrid } from './FeatureGrid';
 export { default as HeroSection } from './HeroSection';
 export { default as StoreCard } from './StoreCard';
 export { default as CatalogProductCard } from './CatalogProductCard';
+export { default as PaymentMethodCard } from './PaymentMethodCard';
+export { default as StepCard } from './StepCard';
+export { default as BankCard } from './BankCard';

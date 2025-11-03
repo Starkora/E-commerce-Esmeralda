@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';  // Importa useState y useRef para manejar referencias
+import Link from 'next/link';  // Importa Link para navegación
 import { FaWhatsapp, FaFacebook, FaInstagramSquare } from 'react-icons/fa'; // Importa iconos
 import Image from 'next/image';  // Si usarás la funcionalidad de Next.js para optimizar imágenes.
 
@@ -75,10 +76,10 @@ const Footer: React.FC = () => {
                             <div>
                                 <h1 className='text-white text-2xl font-black '>Tipos de pago</h1>
                                 <ul>
-                                    <li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Yape</li>
-                                    <li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Plin</li>
-                                    <li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Tarjeta de Credito</li>
-                                    <li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Transferencia</li>
+                                    <li><Link href="/payment-yape" className='text-white hover:text-emerald-100 cursor-pointer leading-10'>Yape</Link></li>
+                                    <li><Link href="/payment-plin" className='text-white hover:text-emerald-100 cursor-pointer leading-10'>Plin</Link></li>
+                                    <li><Link href="/payment-card" className='text-white hover:text-emerald-100 cursor-pointer leading-10'>Tarjeta de Credito</Link></li>
+                                    <li><Link href="/payment-transfer" className='text-white hover:text-emerald-100 cursor-pointer leading-10'>Transferencia</Link></li>
                                 </ul>
                             </div>
                         </nav>
