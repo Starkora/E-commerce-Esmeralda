@@ -34,7 +34,7 @@ const CatalogProductCard: React.FC<CatalogProductCardProps> = ({
   isFavorite = false,
   className = '',
 }) => {
-  // Debug: verificar URL de imagen
+  // Debug: verificar URL de imagen 
   if (process.env.NODE_ENV === 'development') {
     console.log(`Product ${name} imageUrl:`, imageUrl);
   }

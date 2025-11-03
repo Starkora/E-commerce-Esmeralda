@@ -128,19 +128,35 @@ const CatalogPage: React.FC = () => {
         if (!response.ok) throw new Error('Error al cargar productos');
         
         const data = await response.json();
-        const productsData = data.data || data;
+        // Manejar respuesta paginada de Laravel
+        const productsData = Array.isArray(data) ? data : (data.data || []);
         
-        // Fix escaped slashes in URLs
-        const cleanedProducts = productsData.map((product: any) => ({
-          ...product,
-          primary_image: product.primary_image?.replace(/\\\//g, '/') || ''
-        }));
+        // Mapear productos y extraer imagen principal
+        const cleanedProducts = productsData.map((product: any) => {
+          // Intentar obtener la imagen desde diferentes fuentes
+          let imageUrl = '';
+          
+          if (product.primary_image) {
+            imageUrl = product.primary_image.replace(/\\\//g, '/');
+          } else if (product.images && product.images.length > 0) {
+            // Buscar imagen principal o tomar la primera
+            const primaryImg = product.images.find((img: any) => img.is_primary) || product.images[0];
+            imageUrl = primaryImg?.image_url?.replace(/\\\//g, '/') || '';
+          }
+          
+          return {
+            ...product,
+            primary_image: imageUrl
+          };
+        });
         
         // Debug: verificar estructura de datos
+        console.log('Raw API response:', data);
         console.log('Products from API:', cleanedProducts);
         if (cleanedProducts.length > 0) {
           console.log('First product:', cleanedProducts[0]);
           console.log('First product primary_image:', cleanedProducts[0].primary_image);
+          console.log('First product images:', cleanedProducts[0].images);
         }
         
         setProducts(cleanedProducts);
