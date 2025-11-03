@@ -58,15 +58,41 @@ export default function AccountHome() {
 
   const onRequestProfileChange = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar nombre obligatorio
     if (!name.trim()) return toast.error('El nombre no puede estar vacío');
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error('Correo inválido');
-    if (phone && !/^\+?[0-9\s-]{7,15}$/.test(phone)) return toast.error('Teléfono inválido');
+    
+    // Validar nombre máximo 40 caracteres
+    if (name.trim().length > 40) {
+      return toast.error('El nombre no puede exceder 40 caracteres');
+    }
+
+    // Validar apellido máximo 40 caracteres
+    if (lastName && lastName.trim().length > 40) {
+      return toast.error('El apellido no puede exceder 40 caracteres');
+    }
+
+    // Validar formato de correo electrónico
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return toast.error('Por favor ingresa un correo electrónico válido');
+    }
+
+    // Validar teléfono exactamente 9 dígitos
+    if (phone && phone.trim()) {
+      const phoneDigits = phone.trim().replace(/\D/g, '');
+      if (phoneDigits.length !== 9) {
+        return toast.error('El teléfono debe tener exactamente 9 dígitos');
+      }
+    }
 
     const changes: Record<string, any> = {};
     if (name.trim() !== (user?.name || '')) changes.name = name.trim();
     if ((lastName || '').trim() !== (user?.lastName || '')) changes.last_name = (lastName || '').trim();
     if ((email || '').trim() !== (user?.email || '')) changes.email = (email || '').trim();
-    if ((phone || '').trim() !== (user?.phone || '')) changes.phone = (phone || '').trim();
+    if ((phone || '').trim() !== (user?.phone || '')) {
+      // Guardar solo dígitos
+      changes.phone = phone.trim().replace(/\D/g, '');
+    }
 
     if (Object.keys(changes).length === 0) {
       toast('No hay cambios por guardar');
@@ -125,9 +151,54 @@ export default function AccountHome() {
 
   const onRequestPasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) return toast.error('Completa todos los campos');
-    if (newPassword.length < 8) return toast.error('La nueva contraseña debe tener al menos 8 caracteres');
-    if (newPassword !== confirmPassword) return toast.error('Las contraseñas no coinciden');
+    
+    // Validar campos obligatorios
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return toast.error('Completa todos los campos');
+    }
+
+    // Validar contraseña nueva: mínimo 8 caracteres
+    if (newPassword.length < 8) {
+      return toast.error('La contraseña nueva debe tener al menos 8 caracteres');
+    }
+
+    // Validar al menos una letra mayúscula
+    if (!/[A-Z]/.test(newPassword)) {
+      return toast.error('La contraseña nueva debe contener al menos una letra mayúscula');
+    }
+
+    // Validar al menos un número
+    if (!/[0-9]/.test(newPassword)) {
+      return toast.error('La contraseña nueva debe contener al menos un número');
+    }
+
+    // Validar al menos un carácter especial
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=[\]\\/'`~;]/.test(newPassword)) {
+      return toast.error('La contraseña nueva debe contener al menos un carácter especial');
+    }
+
+    // Validar confirmación de contraseña con los mismos requisitos
+    if (confirmPassword.length < 8) {
+      return toast.error('La confirmación de contraseña debe tener al menos 8 caracteres');
+    }
+
+    if (!/[A-Z]/.test(confirmPassword)) {
+      return toast.error('La confirmación de contraseña debe contener al menos una letra mayúscula');
+    }
+
+    if (!/[0-9]/.test(confirmPassword)) {
+      return toast.error('La confirmación de contraseña debe contener al menos un número');
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=[\]\\/'`~;]/.test(confirmPassword)) {
+      return toast.error('La confirmación de contraseña debe contener al menos un carácter especial');
+    }
+
+    // Validar que las contraseñas coincidan
+    if (newPassword !== confirmPassword) {
+      return toast.error('Las contraseñas no coinciden');
+    }
+
     try {
       const { axios, apiBaseUrl, csrfToken, token } = await getCsrf();
       const res = await axios.post(
@@ -187,14 +258,45 @@ export default function AccountHome() {
             {/* Formulario editar datos con verificación */}
             <form onSubmit={onRequestProfileChange} className="bg-white rounded-md border p-4 mb-8">
               <h2 className="font-semibold mb-3">Información básica</h2>
-              <label className="block text-sm text-gray-700 mb-1">Nombre</label>
-              <input value={name} onChange={e=>setName(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
-              <label className="block text-sm text-gray-700 mb-1">Apellido</label>
-              <input value={lastName} onChange={e=>setLastName(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
+              <label className="block text-sm text-gray-700 mb-1">Nombre (máx. 40 caracteres)</label>
+              <input 
+                value={name} 
+                onChange={e=>setName(e.target.value)} 
+                maxLength={40}
+                className="w-full border rounded px-3 py-2 mb-3" 
+                placeholder="Nombre"
+              />
+              <label className="block text-sm text-gray-700 mb-1">Apellido (máx. 40 caracteres)</label>
+              <input 
+                value={lastName} 
+                onChange={e=>setLastName(e.target.value)} 
+                maxLength={40}
+                className="w-full border rounded px-3 py-2 mb-3" 
+                placeholder="Apellido"
+              />
               <label className="block text-sm text-gray-700 mb-1">Correo electrónico</label>
-              <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
-              <label className="block text-sm text-gray-700 mb-1">Teléfono</label>
-              <input value={phone} onChange={e=>setPhone(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
+              <input 
+                type="email"
+                value={email} 
+                onChange={e=>setEmail(e.target.value)} 
+                className="w-full border rounded px-3 py-2 mb-3" 
+                placeholder="correo@ejemplo.com"
+              />
+              <label className="block text-sm text-gray-700 mb-1">Teléfono (9 dígitos)</label>
+              <input 
+                type="tel"
+                value={phone} 
+                onChange={(e) => {
+                  // Solo permitir números y limitar a 9 dígitos
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value.length <= 9) {
+                    setPhone(value);
+                  }
+                }}
+                maxLength={9}
+                className="w-full border rounded px-3 py-2 mb-3" 
+                placeholder="987654321"
+              />
               {!verifying ? (
                 <button type="submit" className="px-4 py-2 rounded bg-emerald-500 text-white hover:bg-emerald-600">Enviar código y guardar</button>
               ) : (
@@ -211,19 +313,38 @@ export default function AccountHome() {
             {/* Formulario cambiar contraseña con verificación por código */}
             <form onSubmit={onRequestPasswordChange} className="bg-white rounded-md border p-4">
               <h2 className="font-semibold mb-3">Cambiar contraseña</h2>
+              <p className="text-xs text-gray-600 mb-3">La nueva contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial.</p>
               <label className="block text-sm text-gray-700 mb-1">Contraseña actual</label>
               <div className="relative mb-3">
-                <input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="w-full border rounded px-3 py-2 pr-10" />
+                <input 
+                  type={showCurrent ? 'text' : 'password'} 
+                  value={currentPassword} 
+                  onChange={e=>setCurrentPassword(e.target.value)} 
+                  className="w-full border rounded px-3 py-2 pr-10" 
+                  placeholder="Contraseña actual"
+                />
                 <button type="button" aria-label={showCurrent ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={()=>setShowCurrent(s=>!s)} className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">{showCurrent ? <FaEyeSlash/> : <FaEye/>}</button>
               </div>
               <label className="block text-sm text-gray-700 mb-1">Nueva contraseña</label>
               <div className="relative mb-3">
-                <input type={showNew ? 'text' : 'password'} value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full border rounded px-3 py-2 pr-10" />
+                <input 
+                  type={showNew ? 'text' : 'password'} 
+                  value={newPassword} 
+                  onChange={e=>setNewPassword(e.target.value)} 
+                  className="w-full border rounded px-3 py-2 pr-10" 
+                  placeholder="Mínimo 8 caracteres"
+                />
                 <button type="button" aria-label={showNew ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={()=>setShowNew(s=>!s)} className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">{showNew ? <FaEyeSlash/> : <FaEye/>}</button>
               </div>
               <label className="block text-sm text-gray-700 mb-1">Confirmar nueva contraseña</label>
               <div className="relative mb-3">
-                <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} className="w-full border rounded px-3 py-2 pr-10" />
+                <input 
+                  type={showConfirm ? 'text' : 'password'} 
+                  value={confirmPassword} 
+                  onChange={e=>setConfirmPassword(e.target.value)} 
+                  className="w-full border rounded px-3 py-2 pr-10" 
+                  placeholder="Repite la contraseña"
+                />
                 <button type="button" aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={()=>setShowConfirm(s=>!s)} className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">{showConfirm ? <FaEyeSlash/> : <FaEye/>}</button>
               </div>
               {!passVerifying ? (

@@ -137,14 +137,17 @@ const RegisterSection: React.FC = () => {
     };
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setPhone(value);
-        setError("");
-        // Solo números, exactamente 9 dígitos
-        if (!/^\d{9}$/.test(value)) {
-            setPhoneError("El teléfono debe tener exactamente 9 dígitos.");
-        } else {
-            setPhoneError("");
+        // Solo permitir números y limitar a 9 dígitos
+        const value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 9) {
+            setPhone(value);
+            setError("");
+            // Validar cuando tenga 9 dígitos
+            if (value.length > 0 && value.length !== 9) {
+                setPhoneError("El teléfono debe tener exactamente 9 dígitos.");
+            } else {
+                setPhoneError("");
+            }
         }
     };
 
@@ -177,23 +180,35 @@ const RegisterSection: React.FC = () => {
         let valid = true;
         setError("");
 
-        // Validación nombre
-        if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]{1,50}$/.test(nombre)) {
-            setNombreError("El nombre solo permite letras y máximo 50 caracteres.");
+        // Validación nombre - máximo 40 caracteres
+        if (!nombre.trim()) {
+            setNombreError("El nombre es obligatorio.");
+            valid = false;
+        } else if (nombre.trim().length > 40) {
+            setNombreError("El nombre no puede exceder 40 caracteres.");
+            valid = false;
+        } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/.test(nombre)) {
+            setNombreError("El nombre solo permite letras.");
             valid = false;
         } else {
             setNombreError("");
         }
 
-        // Validación apellido
-        if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]{1,50}$/.test(apellido)) {
-            setApellidoError("El apellido solo permite letras y máximo 50 caracteres.");
+        // Validación apellido - máximo 40 caracteres
+        if (!apellido.trim()) {
+            setApellidoError("El apellido es obligatorio.");
+            valid = false;
+        } else if (apellido.trim().length > 40) {
+            setApellidoError("El apellido no puede exceder 40 caracteres.");
+            valid = false;
+        } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/.test(apellido)) {
+            setApellidoError("El apellido solo permite letras.");
             valid = false;
         } else {
             setApellidoError("");
         }
 
-        // Validación teléfono
+        // Validación teléfono - exactamente 9 dígitos
         if (!/^\d{9}$/.test(phone)) {
             setPhoneError("El teléfono debe tener exactamente 9 dígitos.");
             valid = false;
@@ -201,33 +216,48 @@ const RegisterSection: React.FC = () => {
             setPhoneError("");
         }
 
-        // Validación email
+        // Validación email - formato válido
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             setError("Por favor, introduce un correo electrónico válido.");
             valid = false;
         }
 
-        // Validación contraseña
-        if (!/^.*(?=.{8,})(?=.*\d)(?=.*[!@#$%^&*()_+\-={}:;"'|<>,.?/~`]).*$/.test(password)) {
-            setPasswordError("La contraseña debe tener mínimo 8 caracteres, al menos 1 número y 1 símbolo.");
+        // Validación contraseña - mínimo 8 caracteres, 1 mayúscula, 1 número, 1 carácter especial
+        if (password.length < 8) {
+            setPasswordError("La contraseña debe tener al menos 8 caracteres.");
+            valid = false;
+        } else if (!/[A-Z]/.test(password)) {
+            setPasswordError("La contraseña debe contener al menos una letra mayúscula.");
+            valid = false;
+        } else if (!/[0-9]/.test(password)) {
+            setPasswordError("La contraseña debe contener al menos un número.");
+            valid = false;
+        } else if (!/[!@#$%^&*(),.?":{}|<>_\-+=[\]\\/'`~;]/.test(password)) {
+            setPasswordError("La contraseña debe contener al menos un carácter especial.");
             valid = false;
         } else {
             setPasswordError("");
         }
 
-        // Validación confirmación contraseña
-        if (!/^.*(?=.{8,})(?=.*\d)(?=.*[!@#$%^&*()_+\-={}:;"'|<>,.?/~`]).*$/.test(confirmPassword)) {
-            setConfirmPasswordError("La confirmación debe tener mínimo 8 caracteres, al menos 1 número y 1 símbolo.");
+        // Validación confirmación de contraseña con los mismos requisitos
+        if (confirmPassword.length < 8) {
+            setConfirmPasswordError("La confirmación debe tener al menos 8 caracteres.");
+            valid = false;
+        } else if (!/[A-Z]/.test(confirmPassword)) {
+            setConfirmPasswordError("La confirmación debe contener al menos una letra mayúscula.");
+            valid = false;
+        } else if (!/[0-9]/.test(confirmPassword)) {
+            setConfirmPasswordError("La confirmación debe contener al menos un número.");
+            valid = false;
+        } else if (!/[!@#$%^&*(),.?":{}|<>_\-+=[\]\\/'`~;]/.test(confirmPassword)) {
+            setConfirmPasswordError("La confirmación debe contener al menos un carácter especial.");
+            valid = false;
+        } else if (password !== confirmPassword) {
+            setConfirmPasswordError("Las contraseñas no coinciden.");
             valid = false;
         } else {
             setConfirmPasswordError("");
-        }
-
-        // Coincidencia de contraseñas
-        if (password !== confirmPassword) {
-            setError("La confirmación de la contraseña no coincide.");
-            valid = false;
         }
 
         if (!valid) return;
@@ -245,12 +275,13 @@ const RegisterSection: React.FC = () => {
                         <h1 className="text-2xl font-semibold text-center">Registrar Cuenta</h1>
                         <p className="text-gray-600">Por favor complete la siguiente información:</p>
                         <div>
-                            <label htmlFor="nombre" className="block text-left text-gray-700">Nombres</label>
+                            <label htmlFor="nombre" className="block text-left text-gray-700">Nombres (máx. 40 caracteres)</label>
                             <input
                                 id="nombre"
                                 name="nombre"
                                 type="text"
                                 placeholder="Ingresa tu Nombre"
+                                maxLength={40}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
                                 value={nombre}
                                 onChange={handleNombreChange}
@@ -260,12 +291,13 @@ const RegisterSection: React.FC = () => {
                             )}
                         </div>
                         <div>
-                            <label htmlFor="apellido" className="block text-left text-gray-700">Apellidos</label>
+                            <label htmlFor="apellido" className="block text-left text-gray-700">Apellidos (máx. 40 caracteres)</label>
                             <input
                                 id="apellido"
                                 name="apellido"
                                 type="text"
                                 placeholder="Ingresa tu Apellido"
+                                maxLength={40}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
                                 value={apellido}
                                 onChange={handleApellidoChange}
@@ -275,12 +307,13 @@ const RegisterSection: React.FC = () => {
                             )}
                         </div>
                         <div>
-                            <label htmlFor="phone" className="block text-left text-gray-700">Teléfono</label>
+                            <label htmlFor="phone" className="block text-left text-gray-700">Teléfono (9 dígitos)</label>
                             <input
                                 id="phone"
                                 name="phone"
-                                type="text"
-                                placeholder="Ingresa tu teléfono"
+                                type="tel"
+                                placeholder="987654321"
+                                maxLength={9}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
                                 value={phone}
                                 onChange={handlePhoneChange}
@@ -294,8 +327,8 @@ const RegisterSection: React.FC = () => {
                             <input
                                 id="email"
                                 name="email"
-                                type="text"
-                                placeholder="Ingresa tu correo electrónico"
+                                type="email"
+                                placeholder="correo@ejemplo.com"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
                                 value={email}
                                 onChange={handleEmailChange}
@@ -304,13 +337,14 @@ const RegisterSection: React.FC = () => {
 
                         <div>
                             <div className="flex justify-between items-center">
-                                <label htmlFor="password" className="text-gray-700">Contraseña</label>
+                                <label htmlFor="password" className="text-gray-700">Contraseña (mín. 8 caracteres)</label>
                             </div>
+                            <p className="text-xs text-gray-600 mb-1">Debe contener una mayúscula, un número y un carácter especial.</p>
                             <input
                                 id="password"
                                 name="password"
                                 type="password"
-                                placeholder="Ingresa tu contraseña"
+                                placeholder="Contraseña"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
                                 value={password}
                                 onChange={handlePasswordChange}
