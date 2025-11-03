@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { StoreCard, StatCard, SearchBar, InfoCard } from '@/components/shared';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 import {
   FaStore,
   FaMapMarkerAlt,
@@ -18,98 +19,100 @@ import {
   FaCreditCard
 } from 'react-icons/fa';
 
+interface Store {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  phone: string;
+  weekday_hours: string;
+  weekend_hours: string;
+  map_url?: string;
+  image_url?: string;
+  is_featured: boolean;
+}
+
+interface StoreStats {
+  total_stores: number;
+  cities_count: number;
+  featured_stores: number;
+}
+
 const StoresPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('Todas');
+  const [stores, setStores] = useState<Store[]>([]);
+  const [cities, setCities] = useState<string[]>(['Todas']);
+  const [statistics, setStatistics] = useState<StoreStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const stores = [
-    {
-      id: 1,
-      name: 'Estilo Esmeralda - Miraflores',
-      address: 'Av. Larco 1234, Centro Comercial Larcomar',
-      city: 'Lima',
-      phone: '+51 987 654 321',
-      hours: {
-        weekday: '10:00 - 21:00',
-        weekend: '10:00 - 22:00',
-      },
-      mapUrl: 'https://maps.google.com/?q=Larcomar+Miraflores',
-      imageUrl: '/assets/stores/store1.jpg',
-      featured: true,
-    },
-    {
-      id: 2,
-      name: 'Estilo Esmeralda - San Isidro',
-      address: 'Av. Conquistadores 890, Plaza San Miguel',
-      city: 'Lima',
-      phone: '+51 987 654 322',
-      hours: {
-        weekday: '09:00 - 20:00',
-        weekend: '10:00 - 20:00',
-      },
-      mapUrl: 'https://maps.google.com/?q=San+Isidro+Lima',
-      imageUrl: '/assets/stores/store2.jpg',
-    },
-    {
-      id: 3,
-      name: 'Estilo Esmeralda - Arequipa Centro',
-      address: 'Portal de Flores 123, Plaza de Armas',
-      city: 'Arequipa',
-      phone: '+51 987 654 323',
-      hours: {
-        weekday: '09:00 - 20:00',
-        weekend: '10:00 - 19:00',
-      },
-      mapUrl: 'https://maps.google.com/?q=Plaza+Armas+Arequipa',
-      imageUrl: '/assets/stores/store3.jpg',
-    },
-    {
-      id: 4,
-      name: 'Estilo Esmeralda - Cusco',
-      address: 'Av. El Sol 456, Centro Histórico',
-      city: 'Cusco',
-      phone: '+51 987 654 324',
-      hours: {
-        weekday: '09:00 - 19:00',
-        weekend: '10:00 - 18:00',
-      },
-      mapUrl: 'https://maps.google.com/?q=Centro+Cusco',
-      imageUrl: '/assets/stores/store4.jpg',
-    },
-    {
-      id: 5,
-      name: 'Estilo Esmeralda - Trujillo',
-      address: 'Jr. Pizarro 789, Centro Comercial Mall Aventura',
-      city: 'Trujillo',
-      phone: '+51 987 654 325',
-      hours: {
-        weekday: '10:00 - 21:00',
-        weekend: '10:00 - 21:00',
-      },
-      mapUrl: 'https://maps.google.com/?q=Mall+Aventura+Trujillo',
-      imageUrl: '/assets/stores/store5.jpg',
-    },
-    {
-      id: 6,
-      name: 'Estilo Esmeralda - Chiclayo',
-      address: 'Av. Balta 234, Real Plaza Chiclayo',
-      city: 'Chiclayo',
-      phone: '+51 987 654 326',
-      hours: {
-        weekday: '10:00 - 21:00',
-        weekend: '10:00 - 21:00',
-      },
-      mapUrl: 'https://maps.google.com/?q=Real+Plaza+Chiclayo',
-      imageUrl: '/assets/stores/store6.jpg',
-    },
-  ];
+  const apiBase = getApiBaseUrl();
 
-  const cities = ['Todas', 'Lima', 'Arequipa', 'Cusco', 'Trujillo', 'Chiclayo'];
+  // Fetch stores
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        if (selectedCity !== 'Todas') params.append('city', selectedCity);
 
-  const statistics = [
+        const response = await fetch(`${apiBase}/api/stores?${params}`);
+        if (!response.ok) throw new Error('Error al cargar tiendas');
+        
+        const data = await response.json();
+        setStores(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStores();
+  }, [searchQuery, selectedCity, apiBase]);
+
+  // Fetch cities
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await fetch(`${apiBase}/api/stores/cities`);
+        if (!response.ok) throw new Error('Error al cargar ciudades');
+        
+        const data = await response.json();
+        setCities(['Todas', ...data]);
+      } catch (err) {
+        console.error('Error loading cities:', err);
+      }
+    };
+
+    fetchCities();
+  }, [apiBase]);
+
+  // Fetch statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${apiBase}/api/stores/statistics`);
+        if (!response.ok) throw new Error('Error al cargar estadísticas');
+        
+        const data = await response.json();
+        setStatistics(data);
+      } catch (err) {
+        console.error('Error loading statistics:', err);
+      }
+    };
+
+    fetchStats();
+  }, [apiBase]);
+
+  const storesToDisplay = stores;
+
+  const statisticsData = [
     {
       icon: <FaStore />,
-      number: '15+',
+      number: statistics ? `${statistics.total_stores}+` : '15+',
       label: 'Tiendas en todo el Perú',
       color: 'emerald' as const,
       variant: 'default' as const,
@@ -195,7 +198,7 @@ const StoresPage: React.FC = () => {
 
           {/* Statistics */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {statistics.map((stat, idx) => (
+            {statisticsData.map((stat, idx) => (
               <StatCard
                 key={idx}
                 icon={stat.icon}
@@ -249,19 +252,31 @@ const StoresPage: React.FC = () => {
           </div>
 
           {/* Stores Grid */}
-          {filteredStores.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              <p className="mt-4 text-gray-600">Cargando tiendas...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16 bg-red-50 rounded-2xl">
+              <p className="text-red-600">{error}</p>
+            </div>
+          ) : storesToDisplay.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {filteredStores.map((store) => (
+              {storesToDisplay.map((store) => (
                 <StoreCard
                   key={store.id}
                   name={store.name}
                   address={store.address}
                   city={store.city}
                   phone={store.phone}
-                  hours={store.hours}
-                  mapUrl={store.mapUrl}
-                  imageUrl={store.imageUrl}
-                  featured={store.featured}
+                  hours={{
+                    weekday: store.weekday_hours,
+                    weekend: store.weekend_hours
+                  }}
+                  mapUrl={store.map_url}
+                  imageUrl={store.image_url}
+                  featured={store.is_featured}
                 />
               ))}
             </div>
