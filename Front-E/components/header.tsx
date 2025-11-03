@@ -22,10 +22,20 @@ const Header: React.FC = () => {
     };
 
     const handleLogout = async () => {
-        await logout();
         const toast = (await import('react-hot-toast')).default;
-        toast.success('Sesión cerrada correctamente', { duration: 1000 });
-        window.location.replace('/login');
+        toast.loading('Cerrando sesión...', { id: 'logout-toast' });
+        
+        try {
+            await logout();
+            toast.success('Sesión cerrada', { id: 'logout-toast', duration: 1000 });
+        } catch (error) {
+            toast.success('Sesión cerrada', { id: 'logout-toast', duration: 1000 });
+        }
+        
+        // Forzar recarga completa de la página para limpiar todo el estado
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 500);
     };
 
     const handleSearchClick = () => {

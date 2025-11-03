@@ -71,23 +71,92 @@ Route::post('/spa-login', function (Request $request) {
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
 ]);
 
-// SPA logout endpoint: invalida la sesión del usuario autenticado
+// SPA logout endpoint: invalida la sesión del usuario autenticado y revoca tokens
 Route::post('/spa-logout', function (Request $request) {
     try {
-        // Si viene un bearer token válido (Sanctum), revocarlo
-        if ($request->user('sanctum')) {
-            $token = $request->user('sanctum')->currentAccessToken();
-            if ($token) { $token->delete(); }
+        $user = null;
+        
+        // 1. Intentar obtener el usuario autenticado (por Bearer token o por sesión)
+        try {
+            $user = $request->user('sanctum') ?? $request->user();
+        } catch (\Throwable $e) {
+            Log::warning('Error obteniendo usuario en logout', ['error' => $e->getMessage()]);
         }
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-    } catch (\Throwable $e) {}
-    return response()->json(['message' => 'Logout exitoso']);
+
+        // 2. Si hay usuario con token de Sanctum (Bearer), revocarlo
+        if ($user) {
+            try {
+                // Revocar el token actual (el que se usó en esta petición)
+                $currentToken = $user->currentAccessToken();
+                if ($currentToken) {
+                    $currentToken->delete();
+                    Log::info('Token Sanctum revocado en logout', ['user_id' => $user->id, 'token_id' => $currentToken->id]);
+                }
+                
+                // OPCIONAL: revocar TODOS los tokens del usuario (logout en todos los dispositivos)
+                // Descomenta la siguiente línea si quieres cerrar sesión en todos lados:
+                // $user->tokens()->delete();
+            } catch (\Throwable $e) {
+                Log::warning('Error revocando tokens en logout', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // 3. Destruir la sesión (para usuarios autenticados por cookie)
+        try {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        } catch (\Throwable $e) {
+            Log::warning('Error invalidando sesión en logout', ['error' => $e->getMessage()]);
+        }
+
+        return response()->json(['message' => 'Logout exitoso']);
+    } catch (\Throwable $e) {
+        Log::error('spa-logout error general', [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+        // Aún en caso de error, responder exitoso para que el frontend limpie su estado
+        return response()->json(['message' => 'Logout completado (con advertencias)']);
+    }
 })->withoutMiddleware([
     \App\Http\Middleware\VerifyCsrfToken::class,
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
 ]);
+
+// Endpoint temporal para ejecutar migraciones (protegido con DEBUG_KEY)
+Route::get('/run-migrations', function (Request $request) {
+    if ($request->query('key') !== env('DEBUG_KEY')) {
+        abort(403, 'Acceso denegado');
+    }
+    
+    try {
+        $output = [];
+        
+        // Ejecutar migraciones
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output['migrate'] = \Illuminate\Support\Facades\Artisan::output();
+        
+        // Obtener estado de migraciones
+        \Illuminate\Support\Facades\Artisan::call('migrate:status');
+        $output['status'] = \Illuminate\Support\Facades\Artisan::output();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Migraciones ejecutadas correctamente',
+            'output' => $output,
+            'timestamp' => now()->toDateTimeString(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
+});
 
 // === Perfil: solicitud de código para confirmar cambios ===
 Route::post('/spa-profile-change-request', function (Request $request) {

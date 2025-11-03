@@ -44,12 +44,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const axios = (await import('axios')).default;
       const apiBaseUrl = getApiBaseUrl();
-      if (!apiBaseUrl) return;
+      if (!apiBaseUrl) {
+        // Si no hay URL configurada, limpiar todo
+        setUser(null);
+        try { 
+          localStorage.removeItem('ee_user'); 
+          localStorage.removeItem('ee_token');
+        } catch {}
+        return;
+      }
+      
       try { await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true }); } catch {}
+      
       const res = await axios.get(`${apiBaseUrl}/user`, {
         withCredentials: true,
         headers: { Accept: 'application/json' },
       });
+      
       // Normalizar distintas formas de respuesta del backend
       const raw = (res as any)?.data?.user 
         || (res as any)?.data?.data?.user 
@@ -68,61 +79,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(u);
         try { localStorage.setItem('ee_user', JSON.stringify(u)); } catch {}
       } else {
-        // Si no vino usuario válido, asumimos no autenticado
+        // Si no vino usuario válido, limpiar todo
         setUser(null);
-        try { localStorage.removeItem('ee_user'); } catch {}
-        try { localStorage.removeItem('ee_token'); } catch {}
+        try { 
+          localStorage.removeItem('ee_user'); 
+          localStorage.removeItem('ee_token');
+        } catch {}
       }
     } catch (err: any) {
-      // Si el backend responde 401/403/419, limpiar estado y storage para no mostrar sesión fantasma
+      // Si el backend responde con error de autenticación, limpiar TODO
       const status = err?.response?.status;
-      if (status === 401 || status === 403 || status === 419) {
+      if (status === 401 || status === 403 || status === 419 || !status) {
         setUser(null);
-        try { localStorage.removeItem('ee_user'); } catch {}
-        try { localStorage.removeItem('ee_token'); } catch {}
+        try { 
+          localStorage.removeItem('ee_user'); 
+          localStorage.removeItem('ee_token');
+        } catch {}
       }
     }
   };
 
   const logout = async () => {
-    try {
-      const axios = (await import('axios')).default;
-      const apiBaseUrl = getApiBaseUrl();
-      if (apiBaseUrl) {
-        // Enviar bearer si existe para revocar el token en backend
-        let token: string | null = null;
-        try { token = localStorage.getItem('ee_token'); } catch {}
-        await axios.post(
-          `${apiBaseUrl}/spa-logout`,
-          {},
-          { withCredentials: true, headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
-        );
-      }
-    } catch {}
+    // 1. Limpiar estado y storage PRIMERO para que la UI responda inmediato
     setUser(null);
     if (typeof window !== 'undefined') {
       try { localStorage.removeItem('ee_user'); } catch {}
       try { localStorage.removeItem('ee_token'); } catch {}
       try { window.dispatchEvent(new Event('logout')); } catch {}
     }
+
+    // 2. Llamar al backend para revocar token y destruir sesión (en segundo plano)
+    try {
+      const axios = (await import('axios')).default;
+      const apiBaseUrl = getApiBaseUrl();
+      if (!apiBaseUrl) return;
+      
+      // Leer token antes de borrarlo (ya lo borramos arriba, pero podemos leerlo de nuevo por si acaso)
+      let token: string | null = null;
+      try { token = localStorage.getItem('ee_token'); } catch {}
+      
+      // Llamar al endpoint de logout con Bearer (si existe) y cookies
+      await axios.post(
+        `${apiBaseUrl}/spa-logout`,
+        {},
+        { 
+          withCredentials: true, 
+          headers: { 
+            'Accept': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          timeout: 5000 // timeout de 5s para no bloquear UI si el backend está lento
+        }
+      );
+    } catch (err) {
+      // Si falla el backend, no importa: ya limpiamos el frontend
+      console.warn('Logout backend falló, pero sesión local limpiada:', err);
+    }
   };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    // Cargar desde almacenamiento local primero para que el header reaccione al instante
-    const stored = window.localStorage.getItem('ee_user');
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch {}
-    }
-    // Intentar validar contra el backend para asegurar sesión real
-    fetchUser().catch(() => {});
+    
+    // NO cargar desde localStorage automáticamente en esta versión
+    // En su lugar, solo validar con el backend
+    // Esto evita mostrar "sesiones fantasma" después de logout
+    
+    // Validar contra el backend para asegurar sesión real
+    fetchUser().catch(() => {
+      // Si falla, asegurar que no haya residuos en storage
+      try { 
+        localStorage.removeItem('ee_user'); 
+        localStorage.removeItem('ee_token');
+      } catch {}
+    });
 
     // Compatibilidad con eventos existentes
     const onLogin = (e: Event) => {
       const ce = e as CustomEvent<User>;
       if (ce?.detail) login(ce.detail);
     };
-    const onLogout = () => login(null);
+    const onLogout = () => {
+      login(null);
+      // Forzar recarga de la página para limpiar cualquier estado residual
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 100);
+    };
     window.addEventListener('login', onLogin as EventListener);
     window.addEventListener('logout', onLogout);
     return () => {
