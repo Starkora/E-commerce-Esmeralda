@@ -2,6 +2,16 @@
 
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+    ],
+    domains: ['images.unsplash.com'],
+  },
 };
 
 if (process.env.NODE_ENV === 'development') {
