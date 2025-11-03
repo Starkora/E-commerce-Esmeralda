@@ -34,8 +34,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(u);
     if (typeof window !== 'undefined') {
       try {
-        if (u) localStorage.setItem('ee_user', JSON.stringify(u));
-        else localStorage.removeItem('ee_user');
+        if (u) {
+          localStorage.setItem('ee_user', JSON.stringify(u));
+          // Limpiar bandera de logout al hacer login exitoso
+          localStorage.removeItem('ee_logout');
+        } else {
+          localStorage.removeItem('ee_user');
+        }
       } catch {}
     }
   };
@@ -100,7 +105,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    // 1. Limpiar estado y storage PRIMERO para que la UI responda inmediato
+    // 1. Marcar que el usuario hizo logout explícito
+    if (typeof window !== 'undefined') {
+      try { localStorage.setItem('ee_logout', 'true'); } catch {}
+    }
+
+    // 2. Limpiar estado y storage PRIMERO para que la UI responda inmediato
     setUser(null);
     if (typeof window !== 'undefined') {
       try { localStorage.removeItem('ee_user'); } catch {}
@@ -108,13 +118,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try { window.dispatchEvent(new Event('logout')); } catch {}
     }
 
-    // 2. Llamar al backend para revocar token y destruir sesión (en segundo plano)
+    // 3. Llamar al backend para revocar token y destruir sesión (en segundo plano)
     try {
       const axios = (await import('axios')).default;
       const apiBaseUrl = getApiBaseUrl();
       if (!apiBaseUrl) return;
       
-      // Leer token antes de borrarlo (ya lo borramos arriba, pero podemos leerlo de nuevo por si acaso)
+      // Leer token antes de borrarlo
       let token: string | null = null;
       try { token = localStorage.getItem('ee_token'); } catch {}
       
@@ -140,11 +150,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // NO cargar desde localStorage automáticamente en esta versión
-    // En su lugar, solo validar con el backend
-    // Esto evita mostrar "sesiones fantasma" después de logout
+    // Verificar si el usuario hizo logout explícito
+    let hasLoggedOut = false;
+    try { 
+      hasLoggedOut = localStorage.getItem('ee_logout') === 'true';
+    } catch {}
     
-    // Validar contra el backend para asegurar sesión real
+    // Si hay logout explícito, NO intentar recuperar sesión
+    if (hasLoggedOut) {
+      setUser(null);
+      try { 
+        localStorage.removeItem('ee_user'); 
+        localStorage.removeItem('ee_token');
+      } catch {}
+      return;
+    }
+    
+    // Si NO hay logout explícito, validar contra el backend para asegurar sesión real
     fetchUser().catch(() => {
       // Si falla, asegurar que no haya residuos en storage
       try { 
@@ -156,7 +178,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Compatibilidad con eventos existentes
     const onLogin = (e: Event) => {
       const ce = e as CustomEvent<User>;
-      if (ce?.detail) login(ce.detail);
+      if (ce?.detail) {
+        // Al hacer login, limpiar la bandera de logout
+        try { localStorage.removeItem('ee_logout'); } catch {}
+        login(ce.detail);
+      }
     };
     const onLogout = () => {
       login(null);

@@ -141,6 +141,8 @@ const LoginSection: React.FC = () => {
                 lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? raw.apellidos ?? undefined,
                 phone: raw.phone ?? raw.telefono ?? raw.celular ?? raw.mobile ?? undefined,
             } : null;
+            // Limpiar bandera de logout al hacer login exitoso
+            try { localStorage.removeItem('ee_logout'); } catch {}
             // Guardar token para llamadas autenticadas (fallback a cookies)
             try { if (data.token) localStorage.setItem('ee_token', data.token); } catch {}
             // Guardar usuario en el contexto (y localStorage) para persistencia inmediata
