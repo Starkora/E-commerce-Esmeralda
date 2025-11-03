@@ -12,3 +12,5 @@ export { default as SearchBar } from './SearchBar';
 export { default as ContactCard } from './ContactCard';
 export { default as FeatureGrid } from './FeatureGrid';
 export { default as HeroSection } from './HeroSection';
+export { default as StoreCard } from './StoreCard';
+export { default as CatalogProductCard } from './CatalogProductCard';

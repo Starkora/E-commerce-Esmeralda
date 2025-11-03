@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Support\Recaptcha;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\StoreController;
 
 // ✅ Obtener usuario autenticado (protegido por Sanctum)
 Route::get('/user', function (Request $request) {
@@ -64,3 +67,29 @@ Route::post('/spa-register', function (Request $request) {
 // ✅ Contact form endpoint (throttled)
 Route::post('/contact', [ContactController::class, 'send'])
     ->middleware('throttle:5,1');
+
+// ===== Products & Catalog Routes =====
+// Public product routes
+Route::prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index']); // List all products with filters
+    Route::get('/statistics', [ProductController::class, 'statistics']); // Product stats
+    Route::get('/featured', [ProductController::class, 'featured']); // Featured products
+    Route::get('/{id}', [ProductController::class, 'show']); // Get single product
+    Route::get('/{id}/related', [ProductController::class, 'related']); // Related products
+});
+
+// Category routes
+Route::prefix('categories')->group(function () {
+    Route::get('/', [CategoryController::class, 'index']); // List all categories
+    Route::get('/{id}', [CategoryController::class, 'show']); // Get single category
+    Route::get('/{id}/products', [CategoryController::class, 'products']); // Get category products
+});
+
+// ===== Stores Routes =====
+Route::prefix('stores')->group(function () {
+    Route::get('/', [StoreController::class, 'index']); // List all stores
+    Route::get('/cities', [StoreController::class, 'cities']); // Get list of cities
+    Route::get('/statistics', [StoreController::class, 'statistics']); // Store stats
+    Route::get('/nearest', [StoreController::class, 'nearest']); // Find nearest store
+    Route::get('/{id}', [StoreController::class, 'show']); // Get single store
+});

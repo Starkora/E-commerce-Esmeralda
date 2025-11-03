@@ -42,8 +42,8 @@ const Footer: React.FC = () => {
                                 <ul>
                                     <a href="./about"><li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Sobre nosotros</li></a>
                                     <a href="./contact"><li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Contactanos</li></a>
-                                    <li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Catalogo</li>
-                                    <li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Tiendas</li>
+                                    <a href="./catalog"><li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Catalogo</li></a>
+                                    <a href="./stores"><li className='text-white hover:text-emerald-100 cursor-pointer	 leading-10'>Tiendas</li></a>
                                 </ul>
                             </div>
                         </nav>
