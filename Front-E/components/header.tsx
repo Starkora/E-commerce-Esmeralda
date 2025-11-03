@@ -13,6 +13,7 @@ const Header: React.FC = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+    const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { user, logout } = useAuth();
     const router = useRouter();
@@ -59,6 +60,21 @@ const Header: React.FC = () => {
         }
     };
 
+    const handleMouseEnterMenu = (categoryName: string) => {
+        // Cancelar cualquier timeout pendiente
+        if (submenuTimeoutRef.current) {
+            clearTimeout(submenuTimeoutRef.current);
+        }
+        setActiveSubmenu(categoryName);
+    };
+
+    const handleMouseLeaveMenu = () => {
+        // Agregar delay de 300ms antes de cerrar el menú
+        submenuTimeoutRef.current = setTimeout(() => {
+            setActiveSubmenu(null);
+        }, 300);
+    };
+
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
@@ -76,6 +92,15 @@ const Header: React.FC = () => {
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [router.pathname]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (submenuTimeoutRef.current) {
+                clearTimeout(submenuTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const categories = [
         {
@@ -118,8 +143,8 @@ const Header: React.FC = () => {
                             <div
                                 key={category.name}
                                 className="relative group"
-                                onMouseEnter={() => setActiveSubmenu(category.name)}
-                                onMouseLeave={() => setActiveSubmenu(null)}
+                                onMouseEnter={() => handleMouseEnterMenu(category.name)}
+                                onMouseLeave={handleMouseLeaveMenu}
                             >
                                 <button className="flex items-center gap-1 hover:text-emerald-400 transition-colors py-2">
                                     {category.name}
@@ -128,7 +153,11 @@ const Header: React.FC = () => {
                                 
                                 {/* Submenu */}
                                 {activeSubmenu === category.name && (
-                                    <div className="absolute top-full left-0 mt-2 bg-white text-gray-800 rounded-lg shadow-xl py-2 min-w-[200px] animate-fade-in">
+                                    <div 
+                                        className="absolute top-full left-0 mt-2 bg-white text-gray-800 rounded-lg shadow-xl py-2 min-w-[200px] animate-fade-in"
+                                        onMouseEnter={() => handleMouseEnterMenu(category.name)}
+                                        onMouseLeave={handleMouseLeaveMenu}
+                                    >
                                         {category.subcategories.map((sub) => (
                                             <Link
                                                 key={sub}
