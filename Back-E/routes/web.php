@@ -41,9 +41,15 @@ Route::post('/spa-login', function (Request $request) {
     \Illuminate\Support\Facades\Auth::login($user);
     return response()->json([
         'message' => 'Login exitoso',
+        // Devolvemos un objeto de usuario más completo para que el frontend pueda
+        // poblar correctamente el perfil incluso si la llamada posterior a /user
+        // (que depende de cookies de sesión cross-site) falla en algunos entornos.
         'user' => [
+            'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'last_name' => $user->last_name,
+            'phone' => $user->phone,
         ],
     ]);
 })

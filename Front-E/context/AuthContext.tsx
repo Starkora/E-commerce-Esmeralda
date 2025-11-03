@@ -62,8 +62,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: raw.id,
           name: raw.name,
           email: raw.email,
-          lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? undefined,
-          phone: raw.phone ?? raw.telefono ?? undefined,
+          lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? raw.apellidos ?? undefined,
+          phone: raw.phone ?? raw.telefono ?? raw.celular ?? raw.mobile ?? undefined,
         };
         setUser(u);
         try { localStorage.setItem('ee_user', JSON.stringify(u)); } catch {}

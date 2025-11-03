@@ -137,8 +137,8 @@ const LoginSection: React.FC = () => {
                 id: raw.id,
                 name: raw.name,
                 email: raw.email,
-                lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? undefined,
-                phone: raw.phone ?? raw.telefono ?? undefined,
+                lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? raw.apellidos ?? undefined,
+                phone: raw.phone ?? raw.telefono ?? raw.celular ?? raw.mobile ?? undefined,
             } : null;
             // Guardar usuario en el contexto (y localStorage) para persistencia inmediata
             try { setAuthUser(user as any); } catch {}
