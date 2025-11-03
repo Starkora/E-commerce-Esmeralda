@@ -130,10 +130,17 @@ const LoginSection: React.FC = () => {
             );
 
             toast.success('Inicio de sesión exitoso', { duration: 3000 });
-            const user = (response && (response as any).data && (response as any).data.user) || null;
+            const raw = (response && (response as any).data && (response as any).data.user) || null;
+            const user = raw ? {
+                id: raw.id,
+                name: raw.name,
+                email: raw.email,
+                lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? undefined,
+                phone: raw.phone ?? raw.telefono ?? undefined,
+            } : null;
             // Guardar usuario en el contexto (y localStorage) para persistencia inmediata
-            try { setAuthUser(user); } catch {}
-            // Mantener compatibilidad con el evento existente
+            try { setAuthUser(user as any); } catch {}
+            // Mantener compatibilidad con el evento existente (normalizado)
             try { window.dispatchEvent(new CustomEvent('login', { detail: user })); } catch {}
             // Redirección segura: si viene ?redirect=/algo, ir allí; de lo contrario, al home
             const rawRedirect = Array.isArray(router.query.redirect) ? router.query.redirect[0] : router.query.redirect;

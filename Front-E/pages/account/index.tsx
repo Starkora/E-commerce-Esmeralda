@@ -20,6 +20,9 @@ export default function AccountHome() {
   const [verifying, setVerifying] = React.useState(false);
   const [verifyCode, setVerifyCode] = React.useState('');
   const [requestId, setRequestId] = React.useState<string | null>(null);
+  const [passVerifying, setPassVerifying] = React.useState(false);
+  const [passCode, setPassCode] = React.useState('');
+  const [passRequestId, setPassRequestId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setName(user?.name || '');
@@ -32,7 +35,8 @@ export default function AccountHome() {
   const API = {
     requestProfileChange: '/spa-profile-change-request', // paso 1: enviar código al correo
     confirmProfileChange: '/spa-profile-change-confirm', // paso 2: confirmar con código
-    changePassword: '/spa-change-password',
+    requestPasswordChange: '/spa-password-change-request',
+    confirmPasswordChange: '/spa-password-change-confirm',
   } as const;
 
   const getCsrf = async () => {
@@ -78,8 +82,8 @@ export default function AccountHome() {
     }
   };
 
-  const onConfirmProfileChange = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onConfirmProfileChange = async (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
     if (!verifyCode.trim()) return toast.error('Ingresa el código de verificación');
     const payload: Record<string, any> = { code: verifyCode.trim() };
     if (requestId) payload.request_id = requestId;
@@ -112,22 +116,49 @@ export default function AccountHome() {
     }
   };
 
-  const onChangePassword = async (e: React.FormEvent) => {
+  const onRequestPasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword || !newPassword || !confirmPassword) return toast.error('Completa todos los campos');
     if (newPassword.length < 8) return toast.error('La nueva contraseña debe tener al menos 8 caracteres');
     if (newPassword !== confirmPassword) return toast.error('Las contraseñas no coinciden');
     try {
       const { axios, apiBaseUrl, csrfToken } = await getCsrf();
-      await axios.post(
-        `${apiBaseUrl}${API.changePassword}`,
+      const res = await axios.post(
+        `${apiBaseUrl}${API.requestPasswordChange}`,
         { _token: csrfToken, current_password: currentPassword, password: newPassword, password_confirmation: confirmPassword },
         { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' } }
       );
-      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+      const reqId = (res as any)?.data?.request_id || null;
+      setPassRequestId(reqId);
+      setPassVerifying(true);
+      toast.success('Código enviado a tu correo');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'No se pudo iniciar el cambio de contraseña';
+      toast.error(msg);
+    }
+  };
+
+  const onConfirmPasswordChange = async (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
+    if (!passCode.trim()) return toast.error('Ingresa el código de verificación');
+    try {
+      const { axios, apiBaseUrl, csrfToken } = await getCsrf();
+      await axios.post(
+        `${apiBaseUrl}${API.confirmPasswordChange}`,
+        {
+          _token: csrfToken,
+          code: passCode.trim(),
+          request_id: passRequestId || undefined,
+          current_password: currentPassword,
+          password: newPassword,
+          password_confirmation: confirmPassword,
+        },
+        { withCredentials: true, headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' } }
+      );
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword(''); setPassCode(''); setPassRequestId(null); setPassVerifying(false);
       toast.success('Contraseña cambiada');
     } catch (err: any) {
-      const msg = err?.response?.data?.message || 'No se pudo cambiar la contraseña';
+      const msg = err?.response?.data?.message || 'Código inválido o expirado';
       toast.error(msg);
     }
   };
@@ -164,14 +195,14 @@ export default function AccountHome() {
                   <p className="text-sm text-gray-700 mb-2">Hemos enviado un código a tu correo. Ingrésalo para confirmar los cambios.</p>
                   <div className="flex gap-2 items-center">
                     <input value={verifyCode} onChange={e=>setVerifyCode(e.target.value)} placeholder="Código" className="flex-1 border rounded px-3 py-2" />
-                    <button onClick={onConfirmProfileChange} className="px-4 py-2 rounded bg-emerald-500 text-white hover:bg-emerald-600">Confirmar</button>
+                    <button type="button" onClick={onConfirmProfileChange} className="px-4 py-2 rounded bg-emerald-500 text-white hover:bg-emerald-600">Confirmar</button>
                   </div>
                 </div>
               )}
             </form>
 
-            {/* Formulario cambiar contraseña */}
-            <form onSubmit={onChangePassword} className="bg-white rounded-md border p-4">
+            {/* Formulario cambiar contraseña con verificación por código */}
+            <form onSubmit={onRequestPasswordChange} className="bg-white rounded-md border p-4">
               <h2 className="font-semibold mb-3">Cambiar contraseña</h2>
               <label className="block text-sm text-gray-700 mb-1">Contraseña actual</label>
               <input type="password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
@@ -179,7 +210,17 @@ export default function AccountHome() {
               <input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
               <label className="block text-sm text-gray-700 mb-1">Confirmar nueva contraseña</label>
               <input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
-              <button type="submit" className="px-4 py-2 rounded bg-emerald-500 text-white hover:bg-emerald-600">Cambiar contraseña</button>
+              {!passVerifying ? (
+                <button type="submit" className="px-4 py-2 rounded bg-emerald-500 text-white hover:bg-emerald-600">Enviar código</button>
+              ) : (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-700 mb-2">Hemos enviado un código a tu correo. Ingrésalo para confirmar el cambio.</p>
+                  <div className="flex gap-2 items-center">
+                    <input value={passCode} onChange={e=>setPassCode(e.target.value)} placeholder="Código" className="flex-1 border rounded px-3 py-2" />
+                    <button type="button" onClick={onConfirmPasswordChange} className="px-4 py-2 rounded bg-emerald-500 text-white hover:bg-emerald-600">Confirmar</button>
+                  </div>
+                </div>
+              )}
             </form>
           </>
           )}
