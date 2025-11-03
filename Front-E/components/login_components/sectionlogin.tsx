@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
 import { getRecaptchaToken } from "@/utils/recaptcha";
 import { useAuth } from "@/context/AuthContext";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 const LoginSection: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -16,6 +17,7 @@ const LoginSection: React.FC = () => {
     const [resetToken, setResetToken] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     // Autocompletar token y email desde la URL cuando se muestra el formulario de cambio de contraseña
     const router = useRouter();
     const redirectTarget = React.useMemo(() => {
@@ -243,15 +245,25 @@ const LoginSection: React.FC = () => {
                                             ¿Olvidó su contraseña?
                                         </button>
                                     </div>
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        placeholder="Ingresa tu contraseña"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                        value={password}
-                                        onChange={handlePasswordChange}
-                                    />
+                                                                        <div className="relative">
+                                                                            <input
+                                                                                    id="password"
+                                                                                    name="password"
+                                                                                    type={showPassword ? 'text' : 'password'}
+                                                                                    placeholder="Ingresa tu contraseña"
+                                                                                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
+                                                                                    value={password}
+                                                                                    onChange={handlePasswordChange}
+                                                                            />
+                                                                            <button
+                                                                                type="button"
+                                                                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                                                                onClick={() => setShowPassword(s => !s)}
+                                                                                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+                                                                            >
+                                                                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                                                            </button>
+                                                                        </div>
                                 </div>
 
                                 {error && (

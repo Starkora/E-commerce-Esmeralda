@@ -6,6 +6,7 @@ import React from 'react';
 import toast from 'react-hot-toast';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 import useRequireAuth from '@/hooks/useRequireAuth';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function AccountHome() {
   const { user, login } = useAuth();
@@ -23,6 +24,9 @@ export default function AccountHome() {
   const [passVerifying, setPassVerifying] = React.useState(false);
   const [passCode, setPassCode] = React.useState('');
   const [passRequestId, setPassRequestId] = React.useState<string | null>(null);
+  const [showCurrent, setShowCurrent] = React.useState(false);
+  const [showNew, setShowNew] = React.useState(false);
+  const [showConfirm, setShowConfirm] = React.useState(false);
 
   React.useEffect(() => {
     setName(user?.name || '');
@@ -205,11 +209,20 @@ export default function AccountHome() {
             <form onSubmit={onRequestPasswordChange} className="bg-white rounded-md border p-4">
               <h2 className="font-semibold mb-3">Cambiar contraseña</h2>
               <label className="block text-sm text-gray-700 mb-1">Contraseña actual</label>
-              <input type="password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
+              <div className="relative mb-3">
+                <input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="w-full border rounded px-3 py-2 pr-10" />
+                <button type="button" aria-label={showCurrent ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={()=>setShowCurrent(s=>!s)} className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">{showCurrent ? <FaEyeSlash/> : <FaEye/>}</button>
+              </div>
               <label className="block text-sm text-gray-700 mb-1">Nueva contraseña</label>
-              <input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
+              <div className="relative mb-3">
+                <input type={showNew ? 'text' : 'password'} value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full border rounded px-3 py-2 pr-10" />
+                <button type="button" aria-label={showNew ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={()=>setShowNew(s=>!s)} className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">{showNew ? <FaEyeSlash/> : <FaEye/>}</button>
+              </div>
               <label className="block text-sm text-gray-700 mb-1">Confirmar nueva contraseña</label>
-              <input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} className="w-full border rounded px-3 py-2 mb-3" />
+              <div className="relative mb-3">
+                <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} className="w-full border rounded px-3 py-2 pr-10" />
+                <button type="button" aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'} onClick={()=>setShowConfirm(s=>!s)} className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">{showConfirm ? <FaEyeSlash/> : <FaEye/>}</button>
+              </div>
               {!passVerifying ? (
                 <button type="submit" className="px-4 py-2 rounded bg-emerald-500 text-white hover:bg-emerald-600">Enviar código</button>
               ) : (
