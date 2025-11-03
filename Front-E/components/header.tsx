@@ -11,9 +11,7 @@ import AccountMenu from './AccountMenu';
 const Header: React.FC = () => {
     const [isSearchActive, setIsSearchActive] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { user, fetchUser, logout } = useAuth();
-    // Asegurar que intentemos sincronizar con el backend cuando se monta el header
-    React.useEffect(() => { fetchUser().catch(() => {}); }, []);
+    const { user, logout } = useAuth();
     const router = useRouter();
 
     // Redirigir al formulario de login
