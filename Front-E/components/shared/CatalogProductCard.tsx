@@ -58,16 +58,24 @@ const CatalogProductCard: React.FC<CatalogProductCardProps> = ({
       `}
     >
       {/* Image Container */}
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
-        <img
-          src={imageUrl || 'https://via.placeholder.com/500?text=Sin+Imagen'}
-          alt={name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          onError={(e) => {
-            console.error(`Error loading image for ${name}:`, imageUrl);
-            e.currentTarget.src = 'https://via.placeholder.com/500?text=Error';
-          }}
-        />
+      <div className="relative aspect-square overflow-hidden bg-gray-200">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            style={{ display: 'block', minHeight: '100%', minWidth: '100%' }}
+            onLoad={() => console.log(`Image loaded successfully: ${name}`)}
+            onError={(e) => {
+              console.error(`Error loading image for ${name}:`, imageUrl);
+              e.currentTarget.src = 'https://via.placeholder.com/500x500/cccccc/666666?text=Error+Cargando';
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-300">
+            <span className="text-gray-600">Sin imagen</span>
+          </div>
+        )}
 
         {/* Badge */}
         {badge && (
