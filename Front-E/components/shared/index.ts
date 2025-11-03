@@ -17,3 +17,7 @@ export { default as CatalogProductCard } from './CatalogProductCard';
 export { default as PaymentMethodCard } from './PaymentMethodCard';
 export { default as StepCard } from './StepCard';
 export { default as BankCard } from './BankCard';
+export { default as MobileMenu } from './MobileMenu';
+export { default as MegaMenu } from './MegaMenu';
+export { default as Newsletter } from './Newsletter';
+export { default as CartBadge } from './CartBadge';

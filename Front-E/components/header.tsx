@@ -1,15 +1,18 @@
-import React, { useState, useRef } from 'react';
-import { FaShoppingCart, FaUser, FaTruck } from 'react-icons/fa';
+import React, { useState, useRef, useEffect } from 'react';
+import { FaShoppingCart, FaUser, FaTruck, FaBars, FaTimes, FaSearch, FaChevronDown } from 'react-icons/fa';
 import Image from 'next/image';
 import AnnouncementBar from './AnnouncementBar';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 import { useAuth } from '@/context/AuthContext';
 import AccountMenu from './AccountMenu';
 
 const Header: React.FC = () => {
     const [isSearchActive, setIsSearchActive] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { user, logout } = useAuth();
     const router = useRouter();
@@ -47,82 +50,227 @@ const Header: React.FC = () => {
         setIsSearchActive(false);
     };
 
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/catalog?search=${encodeURIComponent(searchQuery)}`);
+            setSearchQuery('');
+            setIsSearchActive(false);
+        }
+    };
+
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
+    // Sticky header on scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Close mobile menu on route change
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [router.pathname]);
+
+    const categories = [
+        {
+            name: 'Mujer',
+            subcategories: ['Vestidos', 'Blusas', 'Pantalones', 'Faldas', 'Accesorios']
+        },
+        {
+            name: 'Hombre',
+            subcategories: ['Camisas', 'Pantalones', 'Polos', 'Chaquetas']
+        },
+        {
+            name: 'Niños',
+            subcategories: ['Niñas', 'Niños', 'Bebés']
+        }
+    ];
+
     return (
-        <header className="bg-white border-b-2">
+        <header className={`bg-white sticky top-0 z-50 transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : 'border-b-2'}`}>
             <div className="bg-black text-white text-center py-1">
                 <AnnouncementBar message='🎉 DESCUENTO DEL 20% EN TODOS LOS PRODUCTOS 🎉' />
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-center p-4 bg-black">
-                <div className="flex items-center">
-                    <a href="./">
+            <div className="max-w-7xl mx-auto px-4 py-3">
+                <div className="flex justify-between items-center">
+                    {/* Logo */}
+                    <Link href="/" className="flex-shrink-0">
                         <Image
-                            className="rounded-full object-fill"
+                            className="rounded-full object-fill transition-transform hover:scale-105"
                             src="/LogoTipo.svg"
-                            alt="Logo"
-                            width={100}
-                            height={100}
+                            alt="Estilo Esmeralda"
+                            width={80}
+                            height={80}
+                            priority
                         />
-                    </a>
-                </div>
+                    </Link>
 
-                <nav className="hidden md:block space-x-6 text-white">
-                    <a href="#" className="hover:underline">Mujer</a>
-                    <a href="#" className="hover:underline">Hombre</a>
-                    <a href="#" className="hover:underline">Niños</a>
-                    <a href="#" className="hover:underline">Denim</a>
-                    <a href="#" className="hover:underline">Básicos</a>
-                    <a href="./contact" className="hover:underline">Contacto</a>
-                </nav>
-
-                <div className="flex items-center space-x-4 text-white">
-                    {user ? (
-                        <div className="flex items-center space-x-3">
-                            <div className="hidden sm:block">
-                                <span className="mr-2">Hola,</span>
-                                <span className="font-semibold">{user.name}</span>
+                    {/* Desktop Navigation */}
+                    <nav className="hidden lg:flex items-center space-x-6 text-white">
+                        {categories.map((category) => (
+                            <div
+                                key={category.name}
+                                className="relative group"
+                                onMouseEnter={() => setActiveSubmenu(category.name)}
+                                onMouseLeave={() => setActiveSubmenu(null)}
+                            >
+                                <button className="flex items-center gap-1 hover:text-emerald-400 transition-colors py-2">
+                                    {category.name}
+                                    <FaChevronDown className="text-xs" />
+                                </button>
+                                
+                                {/* Submenu */}
+                                {activeSubmenu === category.name && (
+                                    <div className="absolute top-full left-0 mt-2 bg-white text-gray-800 rounded-lg shadow-xl py-2 min-w-[200px] animate-fade-in">
+                                        {category.subcategories.map((sub) => (
+                                            <Link
+                                                key={sub}
+                                                href={`/catalog?category=${sub.toLowerCase()}`}
+                                                className="block px-4 py-2 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                            >
+                                                {sub}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <AccountMenu userName={user.name} onLogout={handleLogout} />
-                        </div>
-                    ) : (
-                        <button onClick={handleLogin} className="hover:border-b hover:border-white flex items-center bg-transparent border-none">
-                            <FaUser className="text-xl cursor-pointer" />
-                            <span className="ml-2 hidden sm:inline cursor-pointer">Iniciar sesión</span>
+                        ))}
+                        <Link href="/catalog" className="hover:text-emerald-400 transition-colors">Catálogo</Link>
+                        <Link href="/stores" className="hover:text-emerald-400 transition-colors">Tiendas</Link>
+                        <Link href="/contact" className="hover:text-emerald-400 transition-colors">Contacto</Link>
+                    </nav>
+
+                    {/* Search Bar - Desktop */}
+                    <form onSubmit={handleSearch} className="hidden md:flex relative">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Buscar productos..."
+                            className="border-2 border-gray-300 rounded-full pl-4 pr-10 py-2 w-64 focus:w-80 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800"
+                        />
+                        <button
+                            type="submit"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-600"
+                        >
+                            <FaSearch />
                         </button>
-                    )}
-                    <a href="#" className="relative hover:border-b hover:border-white">
-                        <FaShoppingCart className="text-xl">
-                            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">0</span>
-                        </FaShoppingCart>
-                    </a>
-                    <a href="#" className="hover:border-b hover:border-white">
-                        <FaTruck className="text-xl" />
-                    </a>
+                    </form>
+
+                    {/* User Actions */}
+                    <div className="flex items-center space-x-4 text-white">
+                        {user ? (
+                            <div className="hidden lg:flex items-center space-x-3">
+                                <span className="text-sm">Hola, <span className="font-semibold">{user.name}</span></span>
+                                <AccountMenu userName={user.name} onLogout={handleLogout} />
+                            </div>
+                        ) : (
+                            <button
+                                onClick={handleLogin}
+                                className="hidden lg:flex items-center gap-2 hover:text-emerald-400 transition-colors"
+                            >
+                                <FaUser />
+                                <span className="text-sm">Iniciar sesión</span>
+                            </button>
+                        )}
+
+                        <Link href="/cart" className="relative hover:text-emerald-400 transition-colors">
+                            <FaShoppingCart className="text-xl" />
+                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                                0
+                            </span>
+                        </Link>
+
+                        <Link href="/delivery-types" className="hidden md:block hover:text-emerald-400 transition-colors">
+                            <FaTruck className="text-xl" />
+                        </Link>
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            onClick={toggleMobileMenu}
+                            className="lg:hidden text-2xl hover:text-emerald-400 transition-colors"
+                        >
+                            {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+                        </button>
+                    </div>
                 </div>
 
-                <div className="relative mt-4 md:mt-0 bg-white rounded-full">
+                {/* Mobile Search */}
+                <form onSubmit={handleSearch} className="md:hidden mt-3 relative">
                     <input
-                        ref={inputRef}
                         type="text"
-                        placeholder="Digite Aquí"
-                        onClick={handleSearchClick}
-                        onBlur={handleSearchBlur}
-                        className={`border rounded-full pl-4 pr-10 py-1 transition-all duration-300 ${isSearchActive ? 'w-96' : 'w-64'}`}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar productos..."
+                        className="w-full border-2 border-gray-300 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800"
                     />
-                    <svg
-                        onClick={handleSearchClick}
-                        onBlur={handleSearchBlur}
-                        tabIndex={0}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        width="20"
-                        height="20"
+                    <button
+                        type="submit"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                     >
-                        <path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.9 4.9a1 1 0 01-1.414 1.414l-4.9-4.9zm-5.9 0A6 6 0 1010 4a6 6 0 00-3 10.32z" clipRule="evenodd" />
-                    </svg>
-                </div>
+                        <FaSearch />
+                    </button>
+                </form>
             </div>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+                <div className="lg:hidden bg-white border-t-2">
+                    <nav className="max-w-7xl mx-auto px-4 py-4 space-y-2">
+                        {user && (
+                            <div className="pb-3 border-b mb-3">
+                                <p className="text-sm text-gray-600">Hola, <span className="font-semibold text-gray-900">{user.name}</span></p>
+                            </div>
+                        )}
+                        
+                        {categories.map((category) => (
+                            <div key={category.name} className="border-b pb-2">
+                                <button
+                                    onClick={() => setActiveSubmenu(activeSubmenu === category.name ? null : category.name)}
+                                    className="w-full flex items-center justify-between py-2 text-gray-800 font-semibold"
+                                >
+                                    {category.name}
+                                    <FaChevronDown className={`text-xs transition-transform ${activeSubmenu === category.name ? 'rotate-180' : ''}`} />
+                                </button>
+                                {activeSubmenu === category.name && (
+                                    <div className="pl-4 space-y-2 mt-2">
+                                        {category.subcategories.map((sub) => (
+                                            <Link
+                                                key={sub}
+                                                href={`/catalog?category=${sub.toLowerCase()}`}
+                                                className="block py-1 text-gray-600 hover:text-emerald-600"
+                                            >
+                                                {sub}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                        
+                        <Link href="/catalog" className="block py-2 text-gray-800 hover:text-emerald-600">Catálogo</Link>
+                        <Link href="/stores" className="block py-2 text-gray-800 hover:text-emerald-600">Tiendas</Link>
+                        <Link href="/contact" className="block py-2 text-gray-800 hover:text-emerald-600">Contacto</Link>
+                        
+                        {!user && (
+                            <button
+                                onClick={handleLogin}
+                                className="w-full mt-4 bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                            >
+                                Iniciar sesión
+                            </button>
+                        )}
+                    </nav>
+                </div>
+            )}
         </header>
     );
 };
