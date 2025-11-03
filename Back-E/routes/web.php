@@ -43,7 +43,14 @@ Route::post('/spa-login', function (Request $request) {
     }
     \Illuminate\Support\Facades\Auth::login($user);
     // Emitimos un token de acceso para evitar problemas de cookies cross-site
-    $token = $user->createToken('spa')->plainTextToken;
+    $token = null;
+    try {
+        $token = $user->createToken('spa')->plainTextToken;
+    } catch (\Throwable $e) {
+        Log::error('No se pudo crear token Sanctum en spa-login', [
+            'error' => $e->getMessage(),
+        ]);
+    }
     return response()->json([
         'message' => 'Login exitoso',
         // Devolvemos un objeto de usuario más completo para que el frontend pueda
