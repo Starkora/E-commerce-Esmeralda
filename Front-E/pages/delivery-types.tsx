@@ -17,7 +17,9 @@ import {
   FaBox,
   FaClipboardCheck,
   FaShippingFast,
-  FaShoppingBag
+  FaShoppingBag,
+  FaLightbulb,
+  FaGift
 } from 'react-icons/fa';
 
 const DeliveryTypesPage: React.FC = () => {
@@ -238,8 +240,9 @@ const DeliveryTypesPage: React.FC = () => {
                     {shippingCost === 0 ? '¡GRATIS!' : `S/ ${shippingCost}`}
                   </p>
                   {cartValue < 300 && (
-                    <p className="text-sm text-emerald-100 mt-2">
-                      💡 Agrega S/ {300 - cartValue} más para envío gratis
+                    <p className="text-sm text-emerald-100 mt-2 flex items-center gap-2">
+                      <FaLightbulb className="flex-shrink-0" />
+                      <span>Agrega S/ {300 - cartValue} más para envío gratis</span>
                     </p>
                   )}
                 </div>
@@ -290,7 +293,10 @@ const DeliveryTypesPage: React.FC = () => {
               </div>
 
               <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-                <h3 className="text-xl font-bold mb-2">🎁 Envío Gratis</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <FaGift className="text-2xl" />
+                  <h3 className="text-xl font-bold">Envío Gratis</h3>
+                </div>
                 <p className="text-emerald-100 mb-4">
                   En compras mayores a S/ 300
                 </p>
