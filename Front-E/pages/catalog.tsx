@@ -128,7 +128,22 @@ const CatalogPage: React.FC = () => {
         if (!response.ok) throw new Error('Error al cargar productos');
         
         const data = await response.json();
-        setProducts(data.data || data);
+        const productsData = data.data || data;
+        
+        // Fix escaped slashes in URLs
+        const cleanedProducts = productsData.map((product: any) => ({
+          ...product,
+          primary_image: product.primary_image?.replace(/\\\//g, '/') || ''
+        }));
+        
+        // Debug: verificar estructura de datos
+        console.log('Products from API:', cleanedProducts);
+        if (cleanedProducts.length > 0) {
+          console.log('First product:', cleanedProducts[0]);
+          console.log('First product primary_image:', cleanedProducts[0].primary_image);
+        }
+        
+        setProducts(cleanedProducts);
       } catch (err: any) {
         setError(err.message);
       } finally {
