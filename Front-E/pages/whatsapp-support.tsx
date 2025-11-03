@@ -16,7 +16,10 @@ import {
   FaStar,
   FaBolt,
   FaUserFriends,
-  FaPhoneAlt
+  FaPhoneAlt,
+  FaEnvelope,
+  FaPhone,
+  FaSave
 } from 'react-icons/fa';
 
 const WHATSAPP_NUMBER = '51987654321'; // Número peruano
@@ -309,9 +312,10 @@ END:VCARD`;
                   </div>
                   <button
                     onClick={saveContact}
-                    className="w-full text-center py-2 px-4 border-2 border-white/30 rounded-lg hover:bg-white/10 transition-colors"
+                    className="w-full text-center py-2 px-4 border-2 border-white/30 rounded-lg hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
                   >
-                    💾 Guardar Contacto
+                    <FaSave />
+                    Guardar Contacto
                   </button>
                 </div>
               </div>
@@ -352,7 +356,7 @@ END:VCARD`;
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      📧
+                      <FaEnvelope className="text-blue-600 text-lg" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">Email</p>
@@ -364,7 +368,7 @@ END:VCARD`;
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      📞
+                      <FaPhone className="text-purple-600 text-lg" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">Teléfono</p>
