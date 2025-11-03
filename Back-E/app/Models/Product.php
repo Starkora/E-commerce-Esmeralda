@@ -85,7 +85,17 @@ class Product extends Model
      */
     public function getPrimaryImageAttribute()
     {
-        $primaryImage = $this->primaryImage;
+        // Use loaded relation first (avoid N+1)
+        if ($this->relationLoaded('images') && $this->images->isNotEmpty()) {
+            $primaryImage = $this->images->firstWhere('is_primary', true);
+            if ($primaryImage) {
+                return $primaryImage->image_url;
+            }
+            return $this->images->first()->image_url;
+        }
+        
+        // Fallback to query if relation not loaded
+        $primaryImage = $this->images()->where('is_primary', true)->first();
         if ($primaryImage) {
             return $primaryImage->image_url;
         }

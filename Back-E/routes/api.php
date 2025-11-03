@@ -12,6 +12,37 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\StoreController;
 
+// ✅ Health check & Database diagnostic endpoint
+Route::get('/health', function () {
+    try {
+        $productCount = \App\Models\Product::count();
+        $categoryCount = \App\Models\Category::count();
+        $storeCount = \App\Models\Store::count();
+        
+        return response()->json([
+            'status' => 'ok',
+            'database' => [
+                'connected' => true,
+                'products' => $productCount,
+                'categories' => $categoryCount,
+                'stores' => $storeCount,
+            ],
+            'message' => $productCount > 0 
+                ? 'Database is populated' 
+                : 'Database is empty. Run: php artisan db:seed --force'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'database' => [
+                'connected' => false,
+                'error' => $e->getMessage()
+            ],
+            'message' => 'Database connection failed or tables not created. Run migrations first.'
+        ], 500);
+    }
+});
+
 // ✅ Obtener usuario autenticado (protegido por Sanctum)
 Route::get('/user', function (Request $request) {
     return $request->user();

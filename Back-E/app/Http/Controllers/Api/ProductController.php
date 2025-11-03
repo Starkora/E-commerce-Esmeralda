@@ -16,8 +16,15 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Product::with(['category', 'images'])
-                ->active();
+            $query = Product::with(['category', 'images']);
+            
+            // Only filter by active if explicitly requested, otherwise show all
+            if ($request->has('is_active')) {
+                $query->where('is_active', $request->is_active === 'true');
+            } else {
+                // Show all products by default (including inactive)
+                // You can change this to ->active() after verifying your data
+            }
 
             // Search filter
             if ($request->has('search') && $request->search) {
@@ -63,8 +70,7 @@ class ProductController extends Controller
                     $query->orderBy('created_at', 'desc');
                     break;
                 default: // featured
-                    $query->orderBy('is_featured', 'desc')
-                          ->orderBy('created_at', 'desc');
+                    $query->orderByRaw('is_featured DESC, created_at DESC');
                     break;
             }
 
@@ -76,7 +82,8 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al obtener productos',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
             ], 500);
         }
     }
@@ -88,7 +95,6 @@ class ProductController extends Controller
     {
         try {
             $product = Product::with(['category', 'images'])
-                ->active()
                 ->findOrFail($id);
 
             return response()->json($product);
