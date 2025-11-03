@@ -8,6 +8,7 @@ use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CartController extends Controller
@@ -18,16 +19,18 @@ class CartController extends Controller
     private function getOrCreateCart(Request $request)
     {
         if (Auth::check()) {
+            // Usuario autenticado
             $cart = Cart::firstOrCreate(
                 ['user_id' => Auth::id()],
                 ['subtotal' => 0, 'tax' => 0, 'total' => 0]
             );
         } else {
-            $sessionId = $request->session()->get('cart_session_id');
+            // Usuario anónimo - usar session_id del header
+            $sessionId = $request->header('X-Cart-Session');
             
             if (!$sessionId) {
+                // Si no hay session_id, crear uno nuevo
                 $sessionId = Str::uuid()->toString();
-                $request->session()->put('cart_session_id', $sessionId);
             }
             
             $cart = Cart::firstOrCreate(
@@ -52,6 +55,7 @@ class CartController extends Controller
                 'cart' => $cart,
                 'items' => $cart->items,
                 'total_items' => $cart->total_items,
+                'session_id' => $cart->session_id, // Enviar session_id al frontend
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -76,6 +80,13 @@ class CartController extends Controller
 
             $cart = $this->getOrCreateCart($request);
             $product = Product::findOrFail($validated['product_id']);
+
+            // Verificar que el producto tenga precio
+            if (!$product->price) {
+                return response()->json([
+                    'message' => 'El producto no tiene precio definido',
+                ], 400);
+            }
 
             // Check if item already exists
             $existingItem = $cart->items()
@@ -109,11 +120,21 @@ class CartController extends Controller
                 'message' => 'Producto agregado al carrito',
                 'cart' => $cart,
                 'item' => $item,
+                'session_id' => $cart->session_id,
             ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Datos de validación incorrectos',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
+            Log::error('Error adding to cart: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'message' => 'Error al agregar producto al carrito',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
             ], 500);
         }
     }

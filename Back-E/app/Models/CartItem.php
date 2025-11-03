@@ -62,11 +62,15 @@ class CartItem extends Model
 
         // Update cart totals when cart item is saved or deleted
         static::saved(function ($cartItem) {
-            $cartItem->cart->updateTotals();
+            if ($cartItem->cart) {
+                $cartItem->cart->updateTotals();
+            }
         });
 
         static::deleted(function ($cartItem) {
-            $cartItem->cart->updateTotals();
+            if ($cartItem->cart) {
+                $cartItem->cart->updateTotals();
+            }
         });
     }
 }

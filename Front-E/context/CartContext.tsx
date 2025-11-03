@@ -59,27 +59,53 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartSessionId, setCartSessionId] = useState<string | null>(null);
   const apiBase = getApiBaseUrl();
+
+  // Load cart session ID from localStorage on mount
+  useEffect(() => {
+    const sessionId = localStorage.getItem('cart_session_id');
+    if (sessionId) {
+      setCartSessionId(sessionId);
+    }
+  }, []);
 
   // Fetch cart on mount
   useEffect(() => {
     refreshCart();
   }, []);
 
+  const getHeaders = () => {
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+    
+    if (cartSessionId) {
+      headers['X-Cart-Session'] = cartSessionId;
+    }
+    
+    return headers;
+  };
+
   const refreshCart = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${apiBase}/api/cart`, {
         credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
       });
 
       if (!response.ok) throw new Error('Error al cargar el carrito');
 
       const data = await response.json();
+      
+      // Save session_id to localStorage if returned
+      if (data.session_id && !cartSessionId) {
+        localStorage.setItem('cart_session_id', data.session_id);
+        setCartSessionId(data.session_id);
+      }
+      
       setCart({
         ...data.cart,
         total_items: data.total_items,
@@ -106,10 +132,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       const response = await fetch(`${apiBase}/api/cart/items`, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
         body: JSON.stringify({
           product_id: productId,
           quantity,
@@ -121,6 +144,13 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       if (!response.ok) throw new Error('Error al agregar al carrito');
 
       const data = await response.json();
+      
+      // Save session_id if returned
+      if (data.cart.session_id && !cartSessionId) {
+        localStorage.setItem('cart_session_id', data.cart.session_id);
+        setCartSessionId(data.cart.session_id);
+      }
+      
       setCart({
         ...data.cart,
         total_items: data.cart.total_items,
@@ -140,10 +170,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       const response = await fetch(`${apiBase}/api/cart/items/${itemId}`, {
         method: 'PUT',
         credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
         body: JSON.stringify({ quantity }),
       });
 
@@ -168,10 +195,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       const response = await fetch(`${apiBase}/api/cart/items/${itemId}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
       });
 
       if (!response.ok) throw new Error('Error al eliminar producto');
@@ -195,10 +219,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       const response = await fetch(`${apiBase}/api/cart/clear`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
       });
 
       if (!response.ok) throw new Error('Error al vaciar carrito');
