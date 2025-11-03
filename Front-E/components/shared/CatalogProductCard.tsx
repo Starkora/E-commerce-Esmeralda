@@ -34,6 +34,11 @@ const CatalogProductCard: React.FC<CatalogProductCardProps> = ({
   isFavorite = false,
   className = '',
 }) => {
+  // Debug: verificar URL de imagen
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Product ${name} imageUrl:`, imageUrl);
+  }
+  
   const discount = oldPrice ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
 
   const badgeColors = {
@@ -55,9 +60,13 @@ const CatalogProductCard: React.FC<CatalogProductCardProps> = ({
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         <img
-          src={imageUrl}
+          src={imageUrl || 'https://via.placeholder.com/500?text=Sin+Imagen'}
           alt={name}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          onError={(e) => {
+            console.error(`Error loading image for ${name}:`, imageUrl);
+            e.currentTarget.src = 'https://via.placeholder.com/500?text=Error';
+          }}
         />
 
         {/* Badge */}
