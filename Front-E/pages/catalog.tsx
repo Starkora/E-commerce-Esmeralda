@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Head from 'next/head';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 import { 
   SearchBar, 
   CategoryFilter, 
@@ -22,6 +23,39 @@ import {
   FaSortAmountDown
 } from 'react-icons/fa';
 
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  old_price?: number;
+  primary_image: string;
+  category: {
+    id: number;
+    name: string;
+  };
+  rating: number;
+  review_count: number;
+  in_stock: boolean;
+  badge?: string;
+  badge_color?: 'red' | 'green' | 'blue' | 'orange';
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  icon?: string;
+  products_count?: number;
+}
+
+interface ProductStats {
+  total_products: number;
+  in_stock: number;
+  featured: number;
+  average_rating: number;
+  average_discount: number;
+}
+
 const CatalogPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Todos');
@@ -29,183 +63,125 @@ const CatalogPage: React.FC = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  
+  // API Data
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [statistics, setStatistics] = useState<ProductStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock products data
-  const products = [
-    {
-      id: 1,
-      name: 'Vestido Elegante de Noche',
-      price: 289.99,
-      oldPrice: 399.99,
-      imageUrl: '/assets/products/dress1.jpg',
-      category: 'Vestidos',
-      rating: 4.8,
-      reviewCount: 156,
-      inStock: true,
-      badge: 'Nuevo',
-      badgeColor: 'green' as const,
-    },
-    {
-      id: 2,
-      name: 'Blusa Casual con Estampado Floral',
-      price: 89.99,
-      oldPrice: 129.99,
-      imageUrl: '/assets/products/blouse1.jpg',
-      category: 'Blusas',
-      rating: 4.5,
-      reviewCount: 89,
-      inStock: true,
-      badge: 'Oferta',
-      badgeColor: 'red' as const,
-    },
-    {
-      id: 3,
-      name: 'Pantalón de Vestir Negro',
-      price: 159.99,
-      imageUrl: '/assets/products/pants1.jpg',
-      category: 'Pantalones',
-      rating: 4.7,
-      reviewCount: 234,
-      inStock: true,
-    },
-    {
-      id: 4,
-      name: 'Zapatos de Tacón Alto',
-      price: 199.99,
-      oldPrice: 279.99,
-      imageUrl: '/assets/products/shoes1.jpg',
-      category: 'Zapatos',
-      rating: 4.9,
-      reviewCount: 312,
-      inStock: true,
-      badge: 'Popular',
-      badgeColor: 'orange' as const,
-    },
-    {
-      id: 5,
-      name: 'Collar de Perlas Elegante',
-      price: 349.99,
-      imageUrl: '/assets/products/necklace1.jpg',
-      category: 'Accesorios',
-      rating: 4.6,
-      reviewCount: 67,
-      inStock: true,
-      badge: 'Exclusivo',
-      badgeColor: 'blue' as const,
-    },
-    {
-      id: 6,
-      name: 'Falda Midi Plisada',
-      price: 119.99,
-      oldPrice: 179.99,
-      imageUrl: '/assets/products/skirt1.jpg',
-      category: 'Faldas',
-      rating: 4.4,
-      reviewCount: 145,
-      inStock: false,
-    },
-    {
-      id: 7,
-      name: 'Abrigo de Lana Premium',
-      price: 459.99,
-      imageUrl: '/assets/products/coat1.jpg',
-      category: 'Abrigos',
-      rating: 4.9,
-      reviewCount: 198,
-      inStock: true,
-      badge: 'Premium',
-      badgeColor: 'blue' as const,
-    },
-    {
-      id: 8,
-      name: 'Conjunto Deportivo',
-      price: 139.99,
-      oldPrice: 189.99,
-      imageUrl: '/assets/products/sportswear1.jpg',
-      category: 'Deportivo',
-      rating: 4.3,
-      reviewCount: 421,
-      inStock: true,
-      badge: 'Oferta',
-      badgeColor: 'red' as const,
-    },
-  ];
+  const apiBase = getApiBaseUrl();
 
-  const categories = [
-    { name: 'Todos', icon: <FaShoppingBag />, count: products.length },
-    { name: 'Vestidos', icon: <FaTshirt />, count: products.filter(p => p.category === 'Vestidos').length },
-    { name: 'Blusas', icon: <FaTshirt />, count: products.filter(p => p.category === 'Blusas').length },
-    { name: 'Pantalones', icon: <FaTshirt />, count: products.filter(p => p.category === 'Pantalones').length },
-    { name: 'Zapatos', icon: <FaShoePrints />, count: products.filter(p => p.category === 'Zapatos').length },
-    { name: 'Accesorios', icon: <FaGem />, count: products.filter(p => p.category === 'Accesorios').length },
-  ];
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${apiBase}/api/categories?with_count=true`);
+        if (!response.ok) throw new Error('Error al cargar categorías');
+        
+        const data = await response.json();
+        setCategories(data);
+      } catch (err: any) {
+        console.error('Error loading categories:', err);
+      }
+    };
 
-  const statistics = [
-    {
-      icon: <FaShoppingBag />,
-      number: '500+',
-      label: 'Productos disponibles',
-      color: 'emerald' as const,
-      variant: 'default' as const,
-    },
-    {
-      icon: <FaTags />,
-      number: '30%',
-      label: 'Descuentos promedio',
-      color: 'orange' as const,
-      variant: 'default' as const,
-    },
-    {
-      icon: <FaStar />,
-      number: '4.8/5',
-      label: 'Calificación promedio',
-      color: 'blue' as const,
-      variant: 'default' as const,
-    },
-  ];
+    fetchCategories();
+  }, [apiBase]);
 
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    let filtered = products;
+  // Fetch statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${apiBase}/api/products/statistics`);
+        if (!response.ok) throw new Error('Error al cargar estadísticas');
+        
+        const data = await response.json();
+        setStatistics(data);
+      } catch (err) {
+        console.error('Error loading statistics:', err);
+      }
+    };
 
-    // Filter by search
-    if (searchQuery) {
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+    fetchStats();
+  }, [apiBase]);
 
-    // Filter by category
-    if (activeCategory !== 'Todos') {
-      filtered = filtered.filter(p => p.category === activeCategory);
-    }
+  // Fetch products
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        
+        if (searchQuery) params.append('search', searchQuery);
+        if (activeCategory !== 'Todos') {
+          const category = categories.find(c => c.name === activeCategory);
+          if (category) params.append('category_id', category.id.toString());
+        }
+        if (priceRange[0] > 0) params.append('min_price', priceRange[0].toString());
+        if (priceRange[1] < 1000) params.append('max_price', priceRange[1].toString());
+        params.append('sort_by', sortBy);
+        params.append('per_page', '50');
 
-    // Filter by price range
-    filtered = filtered.filter(
-      p => p.price >= priceRange[0] && p.price <= priceRange[1]
-    );
+        const response = await fetch(`${apiBase}/api/products?${params}`);
+        if (!response.ok) throw new Error('Error al cargar productos');
+        
+        const data = await response.json();
+        setProducts(data.data || data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Sort products
-    switch (sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      default:
-        // featured - keep original order
-        break;
-    }
+    fetchProducts();
+  }, [searchQuery, activeCategory, sortBy, priceRange, categories, apiBase]);
 
-    return filtered;
-  }, [searchQuery, activeCategory, sortBy, priceRange]);
+  // Prepare categories for filter
+  const categoryOptions = useMemo(() => {
+    const allCategories = [
+      { name: 'Todos', icon: <FaShoppingBag />, count: statistics?.total_products || 0 },
+      ...categories.map(cat => ({
+        name: cat.name,
+        icon: <FaTshirt />,
+        count: cat.products_count || 0
+      }))
+    ];
+    return allCategories;
+  }, [categories, statistics]);
+
+  // Prepare statistics for display
+  const statsDisplay = useMemo(() => {
+    if (!statistics) return [];
+    
+    return [
+      {
+        icon: <FaShoppingBag />,
+        number: `${statistics.total_products}`,
+        label: 'Productos disponibles',
+        color: 'emerald' as const,
+        variant: 'default' as const,
+      },
+      {
+        icon: <FaTags />,
+        number: `${Math.round(statistics.average_discount)}%`,
+        label: 'Descuentos promedio',
+        color: 'orange' as const,
+        variant: 'default' as const,
+      },
+      {
+        icon: <FaStar />,
+        number: `${statistics.average_rating.toFixed(1)}/5`,
+        label: 'Calificación promedio',
+        color: 'blue' as const,
+        variant: 'default' as const,
+      },
+    ];
+  }, [statistics]);
+
+  const filteredProducts = products;
 
   const handleAddToCart = (id: string | number) => {
     console.log('Added to cart:', id);
@@ -253,7 +229,7 @@ const CatalogPage: React.FC = () => {
 
           {/* Statistics */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {statistics.map((stat, idx) => (
+            {statsDisplay.map((stat, idx) => (
               <StatCard
                 key={idx}
                 icon={stat.icon}
@@ -279,7 +255,7 @@ const CatalogPage: React.FC = () => {
           {/* Category Filter */}
           <div className="mb-8">
             <CategoryFilter
-              categories={categories}
+              categories={categoryOptions}
               activeCategory={activeCategory}
               onCategoryChange={setActiveCategory}
               variant="buttons"
@@ -359,7 +335,22 @@ const CatalogPage: React.FC = () => {
           </div>
 
           {/* Products Grid */}
-          {filteredProducts.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              <p className="mt-4 text-gray-600">Cargando productos...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mb-4">
+                <FaShoppingBag className="text-red-400 text-4xl" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Error al cargar productos
+              </h3>
+              <p className="text-gray-600 mb-6">{error}</p>
+            </div>
+          ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               {filteredProducts.map((product) => (
                 <CatalogProductCard
@@ -367,13 +358,13 @@ const CatalogPage: React.FC = () => {
                   id={product.id}
                   name={product.name}
                   price={product.price}
-                  oldPrice={product.oldPrice}
-                  imageUrl={product.imageUrl}
+                  oldPrice={product.old_price}
+                  imageUrl={product.primary_image}
                   rating={product.rating}
-                  reviewCount={product.reviewCount}
-                  inStock={product.inStock}
+                  reviewCount={product.review_count}
+                  inStock={product.in_stock}
                   badge={product.badge}
-                  badgeColor={product.badgeColor}
+                  badgeColor={product.badge_color}
                   onAddToCart={handleAddToCart}
                   onToggleFavorite={handleToggleFavorite}
                   isFavorite={favorites.has(product.id)}
