@@ -64,11 +64,9 @@ const CatalogProductCard: React.FC<CatalogProductCardProps> = ({
             src={imageUrl}
             alt={name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            style={{ display: 'block', minHeight: '100%', minWidth: '100%' }}
             onLoad={() => console.log(`Image loaded successfully: ${name}`)}
-            onError={(e) => {
+            onError={() => {
               console.error(`Error loading image for ${name}:`, imageUrl);
-              e.currentTarget.src = 'https://via.placeholder.com/500x500/cccccc/666666?text=Error+Cargando';
             }}
           />
         ) : (
