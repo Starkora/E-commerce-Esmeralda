@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const hasLoggedOut = localStorage.getItem('ee_logout') === 'true';
         if (hasLoggedOut) {
           // Si hay logout explícito, NO llamar al backend
+          console.log('[AuthContext] Logout flag detected, skipping fetchUser');
           setUser(null);
           return;
         }
@@ -93,10 +94,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastName: raw.last_name ?? raw.lastname ?? raw.apellido ?? raw.apellidos ?? undefined,
           phone: raw.phone ?? raw.telefono ?? raw.celular ?? raw.mobile ?? undefined,
         };
+        console.log('[AuthContext] User fetched successfully:', u.name);
         setUser(u);
         try { localStorage.setItem('ee_user', JSON.stringify(u)); } catch {}
       } else {
         // Si no vino usuario válido, limpiar todo
+        console.log('[AuthContext] No valid user in response, clearing state');
         setUser(null);
         try { 
           localStorage.removeItem('ee_user'); 
@@ -106,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       // Si el backend responde con error de autenticación, limpiar TODO
       const status = err?.response?.status;
+      console.log('[AuthContext] fetchUser error:', status, err?.response?.data);
       if (status === 401 || status === 403 || status === 419 || !status) {
         setUser(null);
         try { 
