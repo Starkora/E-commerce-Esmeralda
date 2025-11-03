@@ -46,6 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const fetchUser = async () => {
+    // CRÍTICO: Verificar bandera de logout ANTES de hacer cualquier llamada
+    if (typeof window !== 'undefined') {
+      try {
+        const hasLoggedOut = localStorage.getItem('ee_logout') === 'true';
+        if (hasLoggedOut) {
+          // Si hay logout explícito, NO llamar al backend
+          setUser(null);
+          return;
+        }
+      } catch {}
+    }
+
     try {
       const axios = (await import('axios')).default;
       const apiBaseUrl = getApiBaseUrl();
