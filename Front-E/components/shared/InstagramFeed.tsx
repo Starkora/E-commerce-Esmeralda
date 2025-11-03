@@ -1,5 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaInstagram, FaHeart, FaComment } from 'react-icons/fa';
+import { getApiBaseUrl } from '@/utils/apiBaseUrl';
+
+interface Product {
+  id: number;
+  primary_image: string;
+  name: string;
+}
 
 interface InstagramPost {
   id: number;
@@ -10,50 +17,41 @@ interface InstagramPost {
 }
 
 const InstagramFeed: React.FC = () => {
-  const posts: InstagramPost[] = [
-    {
-      id: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400&auto=format&fit=crop',
-      likes: 234,
-      comments: 12,
-      url: '#',
-    },
-    {
-      id: 2,
-      imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&auto=format&fit=crop',
-      likes: 189,
-      comments: 8,
-      url: '#',
-    },
-    {
-      id: 3,
-      imageUrl: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=400&auto=format&fit=crop',
-      likes: 456,
-      comments: 23,
-      url: '#',
-    },
-    {
-      id: 4,
-      imageUrl: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&auto=format&fit=crop',
-      likes: 321,
-      comments: 15,
-      url: '#',
-    },
-    {
-      id: 5,
-      imageUrl: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400&auto=format&fit=crop',
-      likes: 278,
-      comments: 19,
-      url: '#',
-    },
-    {
-      id: 6,
-      imageUrl: 'https://images.unsplash.com/photo-1483181957632-8bda974cbc91?w=400&auto=format&fit=crop',
-      likes: 512,
-      comments: 31,
-      url: '#',
-    },
-  ];
+  const [posts, setPosts] = useState<InstagramPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const apiBase = getApiBaseUrl();
+
+  useEffect(() => {
+    const fetchInstagramPosts = async () => {
+      try {
+        // Obtener productos aleatorios de la BD para simular feed de Instagram
+        const response = await fetch(`${apiBase}/api/products?per_page=6`);
+        if (!response.ok) throw new Error('Error al cargar imágenes');
+        
+        const data = await response.json();
+        const products = data.data || data;
+        
+        // Transformar productos en posts de Instagram
+        const instagramPosts: InstagramPost[] = products.map((product: Product) => ({
+          id: product.id,
+          imageUrl: product.primary_image,
+          likes: Math.floor(Math.random() * 400) + 100, // Likes aleatorios entre 100-500
+          comments: Math.floor(Math.random() * 30) + 5, // Comentarios aleatorios entre 5-35
+          url: `https://instagram.com/estiloesmeralda`, // Link real a Instagram
+        }));
+        
+        setPosts(instagramPosts);
+      } catch (err) {
+        console.error('Error loading instagram feed:', err);
+        // Fallback con datos por defecto si falla la API
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInstagramPosts();
+  }, [apiBase]);
 
   return (
     <section className="py-16 bg-white">
@@ -74,8 +72,17 @@ const InstagramFeed: React.FC = () => {
         </div>
 
         {/* Instagram Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {posts.map((post) => (
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 aspect-square rounded-lg" />
+              </div>
+            ))}
+          </div>
+        ) : posts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {posts.map((post) => (
             <a
               key={post.id}
               href={post.url}
@@ -90,7 +97,7 @@ const InstagramFeed: React.FC = () => {
               />
               
               {/* Overlay on hover */}
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex items-center justify-center">
+              <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex items-center justify-center">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white flex gap-6">
                   <div className="flex items-center gap-2">
                     <FaHeart />
@@ -110,6 +117,11 @@ const InstagramFeed: React.FC = () => {
             </a>
           ))}
         </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No hay imágenes disponibles en este momento</p>
+          </div>
+        )}
 
         {/* CTA */}
         <div className="text-center mt-12">
