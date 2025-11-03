@@ -158,7 +158,7 @@ const SizeGuidePage: React.FC = () => {
               Contáctanos por WhatsApp y te ayudaremos a elegir la talla perfecta
             </p>
             <a
-              href="https://wa.me/521234567890?text=Hola,%20necesito%20ayuda%20con%20las%20tallas"
+              href="https://wa.me/51987654321?text=Hola,%20necesito%20ayuda%20con%20las%20tallas"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors"

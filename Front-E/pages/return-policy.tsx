@@ -185,7 +185,7 @@ const ReturnPolicyPage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="https://wa.me/521234567890?text=Hola,%20quiero%20solicitar%20una%20devolución"
+                href="https://wa.me/51987654321?text=Hola,%20quiero%20solicitar%20una%20devolución"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors"

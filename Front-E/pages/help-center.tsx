@@ -166,7 +166,7 @@ const HelpCenterPage: React.FC = () => {
       
       {/* Botón flotante de WhatsApp */}
       <a
-        href="https://wa.me/521234567890?text=Hola,%20necesito%20ayuda%20con..."
+        href="https://wa.me/51987654321?text=Hola,%20necesito%20ayuda%20con..."
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-2xl transition-all duration-300 hover:scale-110 group"
@@ -300,12 +300,12 @@ const HelpCenterPage: React.FC = () => {
                     <div>
                       <p className="font-medium text-gray-700">WhatsApp</p>
                       <a 
-                        href="https://wa.me/521234567890" 
+                        href="https://wa.me/51987654321" 
                         target="_blank" 
                         rel="noopener"
                         className="text-emerald-600 hover:text-emerald-700"
                       >
-                        +52 123 456 7890
+                        +51 987 654 321
                       </a>
                     </div>
                   </div>
