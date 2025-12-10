@@ -269,14 +269,14 @@ const RegisterSection: React.FC = () => {
     };
 
     return (
-        <section className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl w-full space-y-6">
+        <section className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl w-full space-y-8">
                 {/* Logo y título */}
                 <div className="text-center">
-                    <div className="mx-auto h-14 w-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform duration-300">
-                        <FaShieldAlt className="h-7 w-7 text-white" />
+                    <div className="mx-auto h-16 w-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform duration-300">
+                        <FaShieldAlt className="h-8 w-8 text-white" />
                     </div>
-                    <h2 className="mt-4 text-3xl font-extrabold text-gray-900">
+                    <h2 className="mt-6 text-4xl font-extrabold text-gray-900">
                         Crear Cuenta
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
@@ -286,25 +286,25 @@ const RegisterSection: React.FC = () => {
 
                 {/* Card principal */}
                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-                    <div className="px-6 py-8 sm:px-8 sm:py-10">
-                        <form onSubmit={validateForm} className="space-y-5">
-                            <div className="text-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-900">Información Personal</h3>
-                                <p className="mt-1 text-sm text-gray-600">
+                    <div className="px-8 py-10">
+                        <form onSubmit={validateForm} className="space-y-6">
+                            <div className="text-center mb-8">
+                                <h3 className="text-2xl font-bold text-gray-900">Información Personal</h3>
+                                <p className="mt-2 text-sm text-gray-600">
                                     Completa el formulario para crear tu cuenta
                                 </p>
                             </div>
 
                             {/* Grid para Nombre y Apellido */}
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 {/* Nombre */}
                                 <div>
-                                    <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
                                         Nombres <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative rounded-lg shadow-sm">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <FaUser className="h-4 w-4 text-gray-400" />
+                                            <FaUser className="h-5 w-5 text-gray-400" />
                                         </div>
                                         <input
                                             id="nombre"
@@ -313,7 +313,7 @@ const RegisterSection: React.FC = () => {
                                             required
                                             maxLength={40}
                                             placeholder="Tu nombre"
-                                            className={`block w-full pl-10 pr-3 py-2.5 border ${nombreError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                            className={`block w-full pl-10 pr-3 py-3 border ${nombreError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
                                             value={nombre}
                                             onChange={handleNombreChange}
                                         />
@@ -325,12 +325,12 @@ const RegisterSection: React.FC = () => {
 
                                 {/* Apellido */}
                                 <div>
-                                    <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-2">
                                         Apellidos <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative rounded-lg shadow-sm">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <FaUser className="h-4 w-4 text-gray-400" />
+                                            <FaUser className="h-5 w-5 text-gray-400" />
                                         </div>
                                         <input
                                             id="apellido"
@@ -339,7 +339,7 @@ const RegisterSection: React.FC = () => {
                                             required
                                             maxLength={40}
                                             placeholder="Tus apellidos"
-                                            className={`block w-full pl-10 pr-3 py-2.5 border ${apellidoError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                            className={`block w-full pl-10 pr-3 py-3 border ${apellidoError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
                                             value={apellido}
                                             onChange={handleApellidoChange}
                                         />
@@ -352,12 +352,12 @@ const RegisterSection: React.FC = () => {
 
                             {/* Email */}
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                                     Correo Electrónico <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative rounded-lg shadow-sm">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaEnvelope className="h-4 w-4 text-gray-400" />
+                                        <FaEnvelope className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input
                                         id="email"
@@ -365,7 +365,7 @@ const RegisterSection: React.FC = () => {
                                         type="email"
                                         required
                                         placeholder="tu@email.com"
-                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
+                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
                                         value={email}
                                         onChange={handleEmailChange}
                                     />
@@ -374,12 +374,12 @@ const RegisterSection: React.FC = () => {
 
                             {/* Teléfono */}
                             <div>
-                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                                     Teléfono <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative rounded-lg shadow-sm">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaPhone className="h-4 w-4 text-gray-400" />
+                                        <FaPhone className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input
                                         id="phone"
@@ -388,7 +388,7 @@ const RegisterSection: React.FC = () => {
                                         required
                                         maxLength={9}
                                         placeholder="987654321"
-                                        className={`block w-full pl-10 pr-3 py-2.5 border ${phoneError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                        className={`block w-full pl-10 pr-3 py-3 border ${phoneError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
                                         value={phone}
                                         onChange={handlePhoneChange}
                                     />
@@ -401,12 +401,12 @@ const RegisterSection: React.FC = () => {
 
                             {/* Contraseña */}
                             <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                                     Contraseña <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative rounded-lg shadow-sm">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaLock className="h-4 w-4 text-gray-400" />
+                                        <FaLock className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input
                                         id="password"
@@ -414,15 +414,14 @@ const RegisterSection: React.FC = () => {
                                         type={showPassword ? 'text' : 'password'}
                                         required
                                         placeholder="••••••••"
-                                        className={`block w-full pl-10 pr-12 py-2.5 border ${passwordError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                        className={`block w-full pl-10 pr-12 py-3 border ${passwordError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
                                         value={password}
                                         onChange={handlePasswordChange}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
-                                        aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                     >
                                         {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                                     </button>
@@ -430,7 +429,7 @@ const RegisterSection: React.FC = () => {
                                 {passwordError && (
                                     <p className="mt-1 text-xs text-red-600">{passwordError}</p>
                                 )}
-                                <div className="mt-2 space-y-0.5">
+                                <div className="mt-2 space-y-1">
                                     <p className="text-xs text-gray-600 flex items-center">
                                         <FaCheckCircle className={`h-3 w-3 mr-1 ${password.length >= 8 ? 'text-emerald-500' : 'text-gray-400'}`} />
                                         Mínimo 8 caracteres
@@ -452,12 +451,12 @@ const RegisterSection: React.FC = () => {
 
                             {/* Confirmar Contraseña */}
                             <div>
-                                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                                     Confirmar Contraseña <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative rounded-lg shadow-sm">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaLock className="h-4 w-4 text-gray-400" />
+                                        <FaLock className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input
                                         id="confirmPassword"
@@ -465,15 +464,14 @@ const RegisterSection: React.FC = () => {
                                         type={showConfirmPassword ? 'text' : 'password'}
                                         required
                                         placeholder="••••••••"
-                                        className={`block w-full pl-10 pr-12 py-2.5 border ${confirmPasswordError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                        className={`block w-full pl-10 pr-12 py-3 border ${confirmPasswordError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
                                         value={confirmPassword}
                                         onChange={handleConfirmPasswordChange}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
-                                        aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                     >
                                         {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                                     </button>
@@ -485,7 +483,7 @@ const RegisterSection: React.FC = () => {
 
                             {/* Error Message */}
                             {error && (
-                                <div className="p-3 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
+                                <div className="p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
                                     <p className="text-sm text-red-700">{error}</p>
                                 </div>
                             )}
@@ -494,7 +492,7 @@ const RegisterSection: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
                             >
                                 {loading ? (
                                     <>
@@ -511,7 +509,7 @@ const RegisterSection: React.FC = () => {
                         </form>
 
                         {/* Login Link */}
-                        <div className="mt-5">
+                        <div className="mt-6">
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center">
                                     <div className="w-full border-t border-gray-300"></div>
@@ -520,10 +518,10 @@ const RegisterSection: React.FC = () => {
                                     <span className="px-2 bg-white text-gray-500">¿Ya tienes cuenta?</span>
                                 </div>
                             </div>
-                            <div className="mt-4">
+                            <div className="mt-6">
                                 <Link
                                     href="/login"
-                                    className="w-full flex justify-center py-2.5 px-4 border-2 border-emerald-500 rounded-lg text-sm font-medium text-emerald-600 bg-white hover:bg-emerald-50 transition-all duration-200 shadow-sm hover:shadow-md"
+                                    className="w-full flex justify-center py-3 px-4 border-2 border-emerald-500 rounded-lg text-sm font-medium text-emerald-600 bg-white hover:bg-emerald-50 transition-all duration-200 shadow-sm hover:shadow-md"
                                 >
                                     Iniciar Sesión
                                 </Link>
