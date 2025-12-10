@@ -4,6 +4,7 @@ import Link from "next/link";
 import toast from 'react-hot-toast';
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
 import { getRecaptchaToken } from "@/utils/recaptcha";
+import { FaUser, FaEnvelope, FaLock, FaPhone, FaShieldAlt, FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa';
 
 
 const RegisterSection: React.FC = () => {
@@ -20,6 +21,8 @@ const RegisterSection: React.FC = () => {
     const [phoneError, setPhoneError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // Función para obtener el valor de una cookie por nombre
     function getCookie(name: string) {
@@ -266,133 +269,267 @@ const RegisterSection: React.FC = () => {
     };
 
     return (
-        <section className="w-full h-screen flex items-center justify-center bg-gray-200">
-            <div
-                className="relative w-full max-w-md p-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 rounded-lg"
-            >
-                <div className="relative z-10 p-6 bg-white rounded-lg">
-                    <form onSubmit={validateForm} className="space-y-4">
-                        <h1 className="text-2xl font-semibold text-center">Registrar Cuenta</h1>
-                        <p className="text-gray-600">Por favor complete la siguiente información:</p>
-                        <div>
-                            <label htmlFor="nombre" className="block text-left text-gray-700">Nombres (máx. 40 caracteres)</label>
-                            <input
-                                id="nombre"
-                                name="nombre"
-                                type="text"
-                                placeholder="Ingresa tu Nombre"
-                                maxLength={40}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                value={nombre}
-                                onChange={handleNombreChange}
-                            />
-                            {nombreError && (
-                                <div className="p-1 text-xs text-red-600">{nombreError}</div>
-                            )}
-                        </div>
-                        <div>
-                            <label htmlFor="apellido" className="block text-left text-gray-700">Apellidos (máx. 40 caracteres)</label>
-                            <input
-                                id="apellido"
-                                name="apellido"
-                                type="text"
-                                placeholder="Ingresa tu Apellido"
-                                maxLength={40}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                value={apellido}
-                                onChange={handleApellidoChange}
-                            />
-                            {apellidoError && (
-                                <div className="p-1 text-xs text-red-600">{apellidoError}</div>
-                            )}
-                        </div>
-                        <div>
-                            <label htmlFor="phone" className="block text-left text-gray-700">Teléfono (9 dígitos)</label>
-                            <input
-                                id="phone"
-                                name="phone"
-                                type="tel"
-                                placeholder="987654321"
-                                maxLength={9}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                value={phone}
-                                onChange={handlePhoneChange}
-                            />
-                            {phoneError && (
-                                <div className="p-1 text-xs text-red-600">{phoneError}</div>
-                            )}
-                        </div>
-                        <div>
-                            <label htmlFor="email" className="block text-left text-gray-700">Correo Electrónico</label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                placeholder="correo@ejemplo.com"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                value={email}
-                                onChange={handleEmailChange}
-                            />
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-center">
-                                <label htmlFor="password" className="text-gray-700">Contraseña (mín. 8 caracteres)</label>
-                            </div>
-                            <p className="text-xs text-gray-600 mb-1">Debe contener una mayúscula, un número y un carácter especial.</p>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                placeholder="Contraseña"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                value={password}
-                                onChange={handlePasswordChange}
-                            />
-                            {passwordError && (
-                                <div className="p-1 text-xs text-red-600">{passwordError}</div>
-                            )}
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-center">
-                                <label htmlFor="confirmPassword" className="text-gray-700">Confirmar Contraseña</label>
-                            </div>
-                            <input
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                type="password"
-                                placeholder="Repite tu contraseña"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                value={confirmPassword}
-                                onChange={handleConfirmPasswordChange}
-                            />
-                            {confirmPasswordError && (
-                                <div className="p-1 text-xs text-red-600">{confirmPasswordError}</div>
-                            )}
-                        </div>
-
-                        {error && (
-                            <div className="p-2 bg-red-100 text-red-600 rounded-md border border-red-300 text-sm">
-                                {error}
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            className="relative w-full py-2 bg-white text-black rounded-md overflow-hidden transition duration-300 ease-in-out 
-                            transform hover:text-white hover:bg-white border border-emerald-500 hover:border-transparent
-                                before:absolute before:inset-0 before:bg-emerald-500 before:scale-x-0 before:origin-left before:transition-transform before:duration-300 hover:before:scale-x-100 before:pointer-events-none cursor-pointer"
-                            disabled={loading}
-                            onClick={() => { console.log('Click en botón registrar'); }}
-                        >
-                            <span className="relative z-10 cursor-pointer">{loading ? 'Registrando...' : 'Registrar Cuenta'}</span>
-                        </button>
-                    </form>
-
-                    <p className="mt-4 text-gray-600">
-                        ¿Ya tienes una cuenta? <Link href="/login" className="text-emerald-500 hover:underline">Inicia Sesión</Link>
+        <section className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl w-full space-y-6">
+                {/* Logo y título */}
+                <div className="text-center">
+                    <div className="mx-auto h-14 w-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform duration-300">
+                        <FaShieldAlt className="h-7 w-7 text-white" />
+                    </div>
+                    <h2 className="mt-4 text-3xl font-extrabold text-gray-900">
+                        Crear Cuenta
+                    </h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                        Únete a Estilo Esmeralda
                     </p>
+                </div>
+
+                {/* Card principal */}
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="px-6 py-8 sm:px-8 sm:py-10">
+                        <form onSubmit={validateForm} className="space-y-5">
+                            <div className="text-center mb-6">
+                                <h3 className="text-xl font-bold text-gray-900">Información Personal</h3>
+                                <p className="mt-1 text-sm text-gray-600">
+                                    Completa el formulario para crear tu cuenta
+                                </p>
+                            </div>
+
+                            {/* Grid para Nombre y Apellido */}
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                {/* Nombre */}
+                                <div>
+                                    <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Nombres <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative rounded-lg shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <FaUser className="h-4 w-4 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="nombre"
+                                            name="nombre"
+                                            type="text"
+                                            required
+                                            maxLength={40}
+                                            placeholder="Tu nombre"
+                                            className={`block w-full pl-10 pr-3 py-2.5 border ${nombreError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                            value={nombre}
+                                            onChange={handleNombreChange}
+                                        />
+                                    </div>
+                                    {nombreError && (
+                                        <p className="mt-1 text-xs text-red-600">{nombreError}</p>
+                                    )}
+                                </div>
+
+                                {/* Apellido */}
+                                <div>
+                                    <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        Apellidos <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative rounded-lg shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <FaUser className="h-4 w-4 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="apellido"
+                                            name="apellido"
+                                            type="text"
+                                            required
+                                            maxLength={40}
+                                            placeholder="Tus apellidos"
+                                            className={`block w-full pl-10 pr-3 py-2.5 border ${apellidoError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                            value={apellido}
+                                            onChange={handleApellidoChange}
+                                        />
+                                    </div>
+                                    {apellidoError && (
+                                        <p className="mt-1 text-xs text-red-600">{apellidoError}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Correo Electrónico <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative rounded-lg shadow-sm">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <FaEnvelope className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        required
+                                        placeholder="tu@email.com"
+                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
+                                        value={email}
+                                        onChange={handleEmailChange}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Teléfono */}
+                            <div>
+                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Teléfono <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative rounded-lg shadow-sm">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <FaPhone className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <input
+                                        id="phone"
+                                        name="phone"
+                                        type="tel"
+                                        required
+                                        maxLength={9}
+                                        placeholder="987654321"
+                                        className={`block w-full pl-10 pr-3 py-2.5 border ${phoneError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                        value={phone}
+                                        onChange={handlePhoneChange}
+                                    />
+                                </div>
+                                {phoneError && (
+                                    <p className="mt-1 text-xs text-red-600">{phoneError}</p>
+                                )}
+                                <p className="mt-1 text-xs text-gray-500">Debe tener 9 dígitos</p>
+                            </div>
+
+                            {/* Contraseña */}
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Contraseña <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative rounded-lg shadow-sm">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <FaLock className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <input
+                                        id="password"
+                                        name="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        required
+                                        placeholder="••••••••"
+                                        className={`block w-full pl-10 pr-12 py-2.5 border ${passwordError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                        value={password}
+                                        onChange={handlePasswordChange}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                        aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                    >
+                                        {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                                    </button>
+                                </div>
+                                {passwordError && (
+                                    <p className="mt-1 text-xs text-red-600">{passwordError}</p>
+                                )}
+                                <div className="mt-2 space-y-0.5">
+                                    <p className="text-xs text-gray-600 flex items-center">
+                                        <FaCheckCircle className={`h-3 w-3 mr-1 ${password.length >= 8 ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                        Mínimo 8 caracteres
+                                    </p>
+                                    <p className="text-xs text-gray-600 flex items-center">
+                                        <FaCheckCircle className={`h-3 w-3 mr-1 ${/[A-Z]/.test(password) ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                        Una letra mayúscula
+                                    </p>
+                                    <p className="text-xs text-gray-600 flex items-center">
+                                        <FaCheckCircle className={`h-3 w-3 mr-1 ${/[0-9]/.test(password) ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                        Un número
+                                    </p>
+                                    <p className="text-xs text-gray-600 flex items-center">
+                                        <FaCheckCircle className={`h-3 w-3 mr-1 ${/[!@#$%^&*(),.?":{}|<>_\-+=[\]\\/'`~;]/.test(password) ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                        Un carácter especial
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Confirmar Contraseña */}
+                            <div>
+                                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Confirmar Contraseña <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative rounded-lg shadow-sm">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <FaLock className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <input
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        required
+                                        placeholder="••••••••"
+                                        className={`block w-full pl-10 pr-12 py-2.5 border ${confirmPasswordError ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900`}
+                                        value={confirmPassword}
+                                        onChange={handleConfirmPasswordChange}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                        aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                    >
+                                        {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                                    </button>
+                                </div>
+                                {confirmPasswordError && (
+                                    <p className="mt-1 text-xs text-red-600">{confirmPasswordError}</p>
+                                )}
+                            </div>
+
+                            {/* Error Message */}
+                            {error && (
+                                <div className="p-3 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
+                                    <p className="text-sm text-red-700">{error}</p>
+                                </div>
+                            )}
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                            >
+                                {loading ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Registrando...
+                                    </>
+                                ) : (
+                                    'Crear Cuenta'
+                                )}
+                            </button>
+                        </form>
+
+                        {/* Login Link */}
+                        <div className="mt-5">
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-300"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white text-gray-500">¿Ya tienes cuenta?</span>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <Link
+                                    href="/login"
+                                    className="w-full flex justify-center py-2.5 px-4 border-2 border-emerald-500 rounded-lg text-sm font-medium text-emerald-600 bg-white hover:bg-emerald-50 transition-all duration-200 shadow-sm hover:shadow-md"
+                                >
+                                    Iniciar Sesión
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

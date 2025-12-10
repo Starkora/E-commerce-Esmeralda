@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 import toast from 'react-hot-toast';
+import { useAuth } from './AuthContext';
+import { useRouter } from 'next/router';
+import axiosClient from '@/utils/axiosClient';
 
 interface CartItem {
   id: number;
@@ -59,60 +62,60 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cartSessionId, setCartSessionId] = useState<string | null>(null);
   const apiBase = getApiBaseUrl();
+  const { user } = useAuth();
+  const router = useRouter();
 
-  // Load cart session ID from localStorage on mount
+  // Fetch cart on mount and when user changes
   useEffect(() => {
-    const sessionId = localStorage.getItem('cart_session_id');
-    if (sessionId) {
-      setCartSessionId(sessionId);
+    // No cargar el carrito automáticamente al detectar usuario
+    // Solo inicializar el estado
+    if (!user) {
+      setCart(null);
     }
-  }, []);
-
-  // Fetch cart on mount
-  useEffect(() => {
-    refreshCart();
-  }, []);
-
-  const getHeaders = () => {
-    const headers: HeadersInit = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-    
-    if (cartSessionId) {
-      headers['X-Cart-Session'] = cartSessionId;
-    }
-    
-    return headers;
-  };
+    setLoading(false);
+  }, [user]);
 
   const refreshCart = async () => {
+    // Solo cargar carrito si el usuario está autenticado
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch(`${apiBase}/api/cart`, {
-        credentials: 'include',
-        headers: getHeaders(),
-      });
-
-      if (!response.ok) throw new Error('Error al cargar el carrito');
-
-      const data = await response.json();
       
-      // Save session_id to localStorage if returned
-      if (data.session_id && !cartSessionId) {
-        localStorage.setItem('cart_session_id', data.session_id);
-        setCartSessionId(data.session_id);
+      // Asegurar que tenemos la cookie CSRF antes de hacer la petición
+      try {
+        await axiosClient.get('/sanctum/csrf-cookie');
+      } catch (csrfError) {
+        console.log('[CartContext] Could not get CSRF cookie, continuing anyway');
       }
+      
+      // Pequeña espera para asegurar que las cookies se establecieron
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const response = await axiosClient.get('/api/cart');
+      const data = response.data;
       
       setCart({
         ...data.cart,
         total_items: data.total_items,
         items: data.items || [],
       });
-    } catch (error) {
-      console.error('Error loading cart:', error);
+    } catch (error: any) {
+      console.error('[CartContext] Error loading cart:', error);
+      
+      // Si es 401, el usuario no está autenticado en el backend (sesión expirada)
+      // Esto es normal si el usuario tiene datos en localStorage pero no cookies de sesión
+      if (error.response?.status === 401) {
+        console.log('[CartContext] Session expired or not authenticated, clearing cart silently');
+        setCart(null);
+        setLoading(false);
+        return;
+      }
+      
       // Initialize empty cart on error
       setCart({
         id: 0,
@@ -128,28 +131,45 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
   const addToCart = async (productId: number, quantity = 1, size?: string, color?: string) => {
+    // Verificar si el usuario está autenticado
+    console.log('[CartContext] addToCart - User:', user);
+    
+    // Guard adicional: validar que exista cookie de sesión
+    // Detectar cookie de sesión (nombre depende de APP_NAME: <slug>_session)
+    const hasSession = typeof document !== 'undefined' && document.cookie.split('; ').some(c => {
+      return c.startsWith('laravel_session=') || /_session=/.test(c);
+    });
+    if (!user || !hasSession) {
+      toast.error('Debes iniciar sesión para agregar productos al carrito');
+      if (router.pathname !== '/login') {
+        router.push('/login');
+      }
+      return;
+    }
+
     try {
-      const response = await fetch(`${apiBase}/api/cart/items`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: getHeaders(),
-        body: JSON.stringify({
+      console.log('[CartContext] Sending request to add item:', { productId, quantity, size, color });
+      
+      // Asegurar que tenemos la cookie CSRF
+      try {
+        await axiosClient.get('/sanctum/csrf-cookie');
+      } catch (csrfError) {
+        console.log('[CartContext] Could not get CSRF cookie for addToCart');
+      }
+      
+      const response = await axiosClient.post(
+        '/api/cart/items',
+        {
           product_id: productId,
           quantity,
           size,
           color,
-        }),
-      });
+        }
+      );
 
-      if (!response.ok) throw new Error('Error al agregar al carrito');
-
-      const data = await response.json();
+      console.log('[CartContext] Success response:', response.data);
       
-      // Save session_id if returned
-      if (data.cart.session_id && !cartSessionId) {
-        localStorage.setItem('cart_session_id', data.cart.session_id);
-        setCartSessionId(data.cart.session_id);
-      }
+      const data = response.data;
       
       setCart({
         ...data.cart,
@@ -159,24 +179,32 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
       toast.success('Producto agregado al carrito');
       setIsCartOpen(true); // Open cart drawer
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast.error('Error al agregar al carrito');
+    } catch (error: any) {
+      console.error('[CartContext] Catch error:', error);
+      
+      // Si es 401, el usuario no está autenticado
+      if (error.response?.status === 401) {
+        toast.error('Tu sesión ha expirado. Por favor inicia sesión nuevamente');
+        // Solo redirigir si NO estamos ya en login
+        if (router.pathname !== '/login') {
+          router.push('/login');
+        }
+        return;
+      }
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Error al agregar al carrito';
+      toast.error(errorMessage);
     }
   };
 
   const updateQuantity = async (itemId: number, quantity: number) => {
     try {
-      const response = await fetch(`${apiBase}/api/cart/items/${itemId}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: getHeaders(),
-        body: JSON.stringify({ quantity }),
-      });
+      const response = await axiosClient.put(
+        `/api/cart/items/${itemId}`,
+        { quantity }
+      );
 
-      if (!response.ok) throw new Error('Error al actualizar cantidad');
-
-      const data = await response.json();
+      const data = response.data;
       setCart({
         ...data.cart,
         total_items: data.cart.total_items,
@@ -184,23 +212,28 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       });
 
       toast.success('Cantidad actualizada');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating quantity:', error);
+      
+      if (error.response?.status === 401) {
+        toast.error('Tu sesión ha expirado');
+        if (router.pathname !== '/login') {
+          router.push('/login');
+        }
+        return;
+      }
+      
       toast.error('Error al actualizar cantidad');
     }
   };
 
   const removeItem = async (itemId: number) => {
     try {
-      const response = await fetch(`${apiBase}/api/cart/items/${itemId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: getHeaders(),
-      });
+      const response = await axiosClient.delete(
+        `/api/cart/items/${itemId}`
+      );
 
-      if (!response.ok) throw new Error('Error al eliminar producto');
-
-      const data = await response.json();
+      const data = response.data;
       setCart({
         ...data.cart,
         total_items: data.cart.total_items,
@@ -208,23 +241,26 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       });
 
       toast.success('Producto eliminado');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing item:', error);
+      
+      if (error.response?.status === 401) {
+        toast.error('Tu sesión ha expirado');
+        if (router.pathname !== '/login') {
+          router.push('/login');
+        }
+        return;
+      }
+      
       toast.error('Error al eliminar producto');
     }
   };
 
   const clearCart = async () => {
     try {
-      const response = await fetch(`${apiBase}/api/cart/clear`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: getHeaders(),
-      });
+      const response = await axiosClient.delete('/api/cart/clear');
 
-      if (!response.ok) throw new Error('Error al vaciar carrito');
-
-      const data = await response.json();
+      const data = response.data;
       setCart({
         ...data.cart,
         total_items: 0,
@@ -232,7 +268,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       });
 
       toast.success('Carrito vaciado');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error clearing cart:', error);
       toast.error('Error al vaciar carrito');
     }

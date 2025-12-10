@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { getApiBaseUrl } from "@/utils/apiBaseUrl";
 import { getRecaptchaToken } from "@/utils/recaptcha";
 import { useAuth } from "@/context/AuthContext";
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaArrowLeft, FaShieldAlt } from 'react-icons/fa';
 const LoginSection: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -201,250 +201,380 @@ const LoginSection: React.FC = () => {
     };
 
     return (
-        <section className="w-full h-screen flex items-center justify-center bg-gray-200">
-            <div className="relative w-full max-w-md p-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 rounded-lg">
-                <div className="relative z-10 p-6 bg-white rounded-lg overflow-hidden">
-                    {/* Transición para el formulario de inicio de sesión */}
-                    <Transition
-                        show={!showRecovery}
-                        enter="transition-opacity duration-[3000ms] ease-out"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="transition-opacity duration-[3000ms] ease-in"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
-                        {/* Contenedor que aplica la clase */}
-                        <div className={`${showRecovery ? 'hidden' : 'block'}`}>
-                            <form onSubmit={validateForm} className="space-y-4">
-                                <h1 className="text-2xl font-semibold text-center">Iniciar Sesión</h1>
-                                <p className="text-gray-600">Por favor introduzca su email y contraseña</p>
+        <section className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8">
+                {/* Logo y título */}
+                <div className="text-center">
+                    <div className="mx-auto h-16 w-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-transform duration-300">
+                        <FaShieldAlt className="h-8 w-8 text-white" />
+                    </div>
+                    <h2 className="mt-6 text-4xl font-extrabold text-gray-900">
+                        Estilo Esmeralda
+                    </h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                        Tu tienda de moda favorita
+                    </p>
+                </div>
 
-                                {redirectTarget && (
-                                    <div className="p-2 bg-amber-50 border border-amber-300 text-amber-700 rounded text-sm">
-                                        Necesitas iniciar sesión para continuar a <span className="font-medium">{redirectTarget}</span>.
+                {/* Card principal */}
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="px-8 py-10">
+                        {/* Transición para el formulario de inicio de sesión */}
+                        <Transition
+                            show={!showRecovery}
+                            enter="transition-opacity duration-300 ease-out"
+                            enterFrom="opacity-0"
+                            enterTo="opacity-100"
+                            leave="transition-opacity duration-300 ease-in"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                        >
+                            <div className={`${showRecovery ? 'hidden' : 'block'}`}>
+                                <form onSubmit={validateForm} className="space-y-6">
+                                    <div className="text-center mb-8">
+                                        <h3 className="text-2xl font-bold text-gray-900">Iniciar Sesión</h3>
+                                        <p className="mt-2 text-sm text-gray-600">
+                                            Ingresa a tu cuenta para continuar
+                                        </p>
                                     </div>
-                                )}
 
-                                <div>
-                                    <label htmlFor="email" className="block text-left text-gray-700">Correo Electrónico</label>
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="text"
-                                        placeholder="Ingresa tu correo electrónico"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                        value={email}
-                                        onChange={handleEmailChange}
-                                    />
-                                </div>
+                                    {redirectTarget && (
+                                        <div className="p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+                                            <div className="flex">
+                                                <div className="flex-shrink-0">
+                                                    <FaShieldAlt className="h-5 w-5 text-amber-400" />
+                                                </div>
+                                                <div className="ml-3">
+                                                    <p className="text-sm text-amber-700">
+                                                        Necesitas iniciar sesión para continuar a <span className="font-semibold">{redirectTarget}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
-                                <div>
-                                    <div className="flex justify-between items-center">
-                                        <label htmlFor="password" className="text-gray-700">Contraseña</label>
+                                    {/* Email Input */}
+                                    <div>
+                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Correo Electrónico
+                                        </label>
+                                        <div className="relative rounded-lg shadow-sm">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <FaEnvelope className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <input
+                                                id="email"
+                                                name="email"
+                                                type="email"
+                                                autoComplete="email"
+                                                required
+                                                placeholder="tu@email.com"
+                                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
+                                                value={email}
+                                                onChange={handleEmailChange}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Password Input */}
+                                    <div>
+                                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Contraseña
+                                        </label>
+                                        <div className="relative rounded-lg shadow-sm">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <FaLock className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <input
+                                                id="password"
+                                                name="password"
+                                                type={showPassword ? 'text' : 'password'}
+                                                autoComplete="current-password"
+                                                required
+                                                placeholder="••••••••"
+                                                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
+                                                value={password}
+                                                onChange={handlePasswordChange}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                            >
+                                                {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Forgot Password Link */}
+                                    <div className="flex items-center justify-end">
                                         <button
                                             type="button"
                                             onClick={() => setShowRecovery(true)}
-                                            className="text-sm text-emerald-500 hover:underline"
+                                            className="text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
                                         >
-                                            ¿Olvidó su contraseña?
+                                            ¿Olvidaste tu contraseña?
                                         </button>
                                     </div>
-                                                                        <div className="relative">
-                                                                            <input
-                                                                                    id="password"
-                                                                                    name="password"
-                                                                                    type={showPassword ? 'text' : 'password'}
-                                                                                    placeholder="Ingresa tu contraseña"
-                                                                                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                                                                    value={password}
-                                                                                    onChange={handlePasswordChange}
-                                                                            />
-                                                                            <button
-                                                                                type="button"
-                                                                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                                                                                onClick={() => setShowPassword(s => !s)}
-                                                                                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
-                                                                            >
-                                                                                {showPassword ? <FaEyeSlash /> : <FaEye />}
-                                                                            </button>
-                                                                        </div>
+
+                                    {/* Error Message */}
+                                    {error && (
+                                        <div className="p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
+                                            <p className="text-sm text-red-700">{error}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Submit Button */}
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Ingresando...
+                                            </>
+                                        ) : (
+                                            'Iniciar Sesión'
+                                        )}
+                                    </button>
+                                </form>
+
+                                {/* Register Link */}
+                                <div className="mt-6">
+                                    <div className="relative">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <div className="w-full border-t border-gray-300"></div>
+                                        </div>
+                                        <div className="relative flex justify-center text-sm">
+                                            <span className="px-2 bg-white text-gray-500">¿Eres nuevo?</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-6">
+                                        <Link
+                                            href="/register"
+                                            className="w-full flex justify-center py-3 px-4 border-2 border-emerald-500 rounded-lg text-sm font-medium text-emerald-600 bg-white hover:bg-emerald-50 transition-all duration-200 shadow-sm hover:shadow-md"
+                                        >
+                                            Crear una cuenta nueva
+                                        </Link>
+                                    </div>
                                 </div>
-
-                                {error && (
-                                    <div className="p-2 bg-red-100 text-red-600 rounded-md border border-red-300 text-sm">
-                                        {error}
-                                    </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    className="relative w-full py-2 bg-white text-black rounded-md overflow-hidden transition duration-300 ease-in-out 
-                                    transform hover:text-white hover:bg-white border border-emerald-500 hover:border-transparent
-                                    before:absolute before:inset-0 before:bg-emerald-500 before:scale-x-0 before:origin-left before:transition-transform before:duration-300 hover:before:scale-x-100"
-                                    disabled={loading}
-                                >
-                                    <span className="relative z-10">{loading ? 'Ingresando...' : 'Iniciar Sesión'}</span>
-                                </button>
-                            </form>
-							  <p className="mt-4 text-gray-600">
-                        ¿No tienes una cuenta? <Link href="./register" className="text-emerald-500 hover:underline">Regístrate</Link>
-                    </p>
-                        </div>
-                    </Transition>
-
-                    {/* Transición para el formulario de recuperación de contraseña */}
-                    <Transition
-                        show={showRecovery && !showReset}
-                        enter="transition-opacity duration-[3000ms] ease-out"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="transition-opacity duration-[3000ms] ease-in"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
-                        <div className={`${showRecovery && !showReset ? 'block' : 'hidden'}`}>
-                            <div className="space-y-4 text-center">
-                                {error && (
-                                    <div className="p-2 bg-red-100 text-red-600 rounded-md border border-red-300 text-sm">{error}</div>
-                                )}
-                                {/* Mostrar solo la alerta y redirigir al login tras enviar el correo */}
-                                {(!error && !showReset) && (
-                                    <>
-                                        <h1 className="text-2xl font-semibold">Recuperar Contraseña</h1>
-                                        <p className="text-gray-600">Por favor introduzca su email:</p>
-                                        <input
-                                            type="email"
-                                            placeholder="Email"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                            value={email}
-                                            onChange={handleEmailChange}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="w-full py-2 bg-black text-white rounded-md hover:bg-gray-800 transition duration-300"
-                                            onClick={async () => {
-                                                setError("");
-                                                if (!email) {
-                                                    setError("Ingresa tu correo electrónico");
-                                                    return;
-                                                }
-                                                try {
-                                                    const axios = (await import('axios')).default;
-                                                    const apiBaseUrl = getApiBaseUrl();
-                                                    if (!apiBaseUrl) throw new Error('Falta configurar NEXT_PUBLIC_API_URL con la URL del backend');
-
-                                                    // Cookies y token CSRF
-                                                    await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
-                                                    const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
-                                                    const csrfToken: string = csrfResp?.data?.csrf_token || '';
-
-                                                    await axios.post(
-                                                        `${apiBaseUrl}/spa-forgot-password`,
-                                                        { _token: csrfToken, email },
-                                                        {
-                                                            withCredentials: true,
-                                                            headers: { 
-                                                                'Accept': 'application/json',
-                                                                'X-CSRF-TOKEN': csrfToken || '',
-                                                                'X-Requested-With': 'XMLHttpRequest',
-                                                                'Content-Type': 'application/json',
-                                                            }
-                                                        }
-                                                    );
-                                                    toast.success('Enlace de recuperación enviado a tu correo');
-                                                    setShowReset(false);
-                                                    setTimeout(() => {
-                                                        window.location.replace('/login');
-                                                    }, 2000);
-                                                } catch (err: any) {
-                                                    const msg = err.response?.data?.message || 'Error al enviar el correo';
-                                                    setError(msg);
-                                                    toast.error(msg);
-                                                }
-                                            }}
-                                        >
-                                            Recuperar
-                                        </button>
-                                        <p className="mt-4 text-gray-600">
-                                            ¿Recordó su contraseña?{' '}
-                                            <button
-                                                type="button"
-                                                onClick={() => { setShowRecovery(false); setShowReset(false); }}
-                                                className="text-emerald-500 hover:underline"
-                                            >
-                                                Volver a Inicio de sesión
-                                            </button>
-                                        </p>
-                                    </>
-                                )}
-                                {/* Alerta de éxito y redirección */}
-                                {(!error && showReset) && (
-                                    <div className="p-2 bg-emerald-50 text-emerald-700 rounded border border-emerald-300 text-sm">
-                                        Enlace de recuperación enviado a tu correo. Serás redirigido al inicio de sesión.
-                                    </div>
-                                )}
                             </div>
-                        </div>
-                    </Transition>
+                        </Transition>
 
-                    {/* Transición para el formulario de cambio de contraseña */}
-                    <Transition
-                        show={showReset}
-                        enter="transition-opacity duration-[3000ms] ease-out"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="transition-opacity duration-[3000ms] ease-in"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
-                        <div className={`${showReset ? 'block' : 'hidden'}`}>
-                            <div className="space-y-4 text-center">
-                                <h1 className="text-2xl font-semibold">Cambiar Contraseña</h1>
-                                <p className="text-gray-600">Revisa tu correo, copia el token y crea tu nueva contraseña:</p>
-                                <input
-                                    type="text"
-                                    placeholder="Token de recuperación"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                    value={resetToken}
-                                    onChange={e => setResetToken(e.target.value)}
-                                />
-                                <input
-                                    type="password"
-                                    placeholder="Nueva contraseña"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                    value={newPassword}
-                                    onChange={e => setNewPassword(e.target.value)}
-                                />
-                                <input
-                                    type="password"
-                                    placeholder="Confirmar nueva contraseña"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-300 focus:shadow-lg transition duration-200 ease-in-out"
-                                    value={confirmNewPassword}
-                                    onChange={e => setConfirmNewPassword(e.target.value)}
-                                />
-                                <button
-                                    type="button"
-                                    className="w-full py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition duration-300"
-                                    onClick={handleResetPassword}
-                                >
-                                    Cambiar contraseña
-                                </button>
-                                <p className="mt-4 text-gray-600">
+                        {/* Transición para el formulario de recuperación de contraseña */}
+                        <Transition
+                            show={showRecovery && !showReset}
+                            enter="transition-opacity duration-300 ease-out"
+                            enterFrom="opacity-0"
+                            enterTo="opacity-100"
+                            leave="transition-opacity duration-300 ease-in"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                        >
+                            <div className={`${showRecovery && !showReset ? 'block' : 'hidden'}`}>
+                                <div className="space-y-6">
+                                    {/* Back Button */}
                                     <button
                                         type="button"
-                                        onClick={() => { setShowReset(false); setShowRecovery(false); }}
-                                        className="text-emerald-500 hover:underline"
+                                        onClick={() => { setShowRecovery(false); setShowReset(false); setError(""); }}
+                                        className="flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
                                     >
-                                        Volver a Inicio de sesión
+                                        <FaArrowLeft className="h-4 w-4 mr-2" />
+                                        Volver al inicio de sesión
                                     </button>
-                                </p>
-                                {error && (
-                                    <div className="p-2 bg-red-100 text-red-600 rounded-md border border-red-300 text-sm">{error}</div>
-                                )}
+
+                                    <div className="text-center">
+                                        <h3 className="text-2xl font-bold text-gray-900">Recuperar Contraseña</h3>
+                                        <p className="mt-2 text-sm text-gray-600">
+                                            Te enviaremos un enlace para restablecer tu contraseña
+                                        </p>
+                                    </div>
+
+                                    {/* Email Input */}
+                                    <div>
+                                        <label htmlFor="recovery-email" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Correo Electrónico
+                                        </label>
+                                        <div className="relative rounded-lg shadow-sm">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <FaEnvelope className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <input
+                                                id="recovery-email"
+                                                type="email"
+                                                placeholder="tu@email.com"
+                                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
+                                                value={email}
+                                                onChange={handleEmailChange}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Error Message */}
+                                    {error && (
+                                        <div className="p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
+                                            <p className="text-sm text-red-700">{error}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Submit Button */}
+                                    <button
+                                        type="button"
+                                        className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                        onClick={async () => {
+                                            setError("");
+                                            if (!email) {
+                                                setError("Ingresa tu correo electrónico");
+                                                return;
+                                            }
+                                            try {
+                                                const axios = (await import('axios')).default;
+                                                const apiBaseUrl = getApiBaseUrl();
+                                                if (!apiBaseUrl) throw new Error('Falta configurar NEXT_PUBLIC_API_URL con la URL del backend');
+
+                                                await axios.get(`${apiBaseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
+                                                const csrfResp = await axios.get(`${apiBaseUrl}/csrf-token`, { withCredentials: true });
+                                                const csrfToken: string = csrfResp?.data?.csrf_token || '';
+
+                                                await axios.post(
+                                                    `${apiBaseUrl}/spa-forgot-password`,
+                                                    { _token: csrfToken, email },
+                                                    {
+                                                        withCredentials: true,
+                                                        headers: { 
+                                                            'Accept': 'application/json',
+                                                            'X-CSRF-TOKEN': csrfToken || '',
+                                                            'X-Requested-With': 'XMLHttpRequest',
+                                                            'Content-Type': 'application/json',
+                                                        }
+                                                    }
+                                                );
+                                                toast.success('Enlace de recuperación enviado a tu correo');
+                                                setTimeout(() => {
+                                                    setShowRecovery(false);
+                                                    setShowReset(false);
+                                                }, 2000);
+                                            } catch (err: any) {
+                                                const msg = err.response?.data?.message || 'Error al enviar el correo';
+                                                setError(msg);
+                                                toast.error(msg);
+                                            }
+                                        }}
+                                    >
+                                        Enviar enlace de recuperación
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </Transition>
+                        </Transition>
+
+                        {/* Transición para el formulario de cambio de contraseña */}
+                        <Transition
+                            show={showReset}
+                            enter="transition-opacity duration-300 ease-out"
+                            enterFrom="opacity-0"
+                            enterTo="opacity-100"
+                            leave="transition-opacity duration-300 ease-in"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                        >
+                            <div className={`${showReset ? 'block' : 'hidden'}`}>
+                                <div className="space-y-6">
+                                    {/* Back Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setShowReset(false); setShowRecovery(false); setError(""); }}
+                                        className="flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                                    >
+                                        <FaArrowLeft className="h-4 w-4 mr-2" />
+                                        Volver al inicio de sesión
+                                    </button>
+
+                                    <div className="text-center">
+                                        <h3 className="text-2xl font-bold text-gray-900">Cambiar Contraseña</h3>
+                                        <p className="mt-2 text-sm text-gray-600">
+                                            Revisa tu correo y completa los siguientes campos
+                                        </p>
+                                    </div>
+
+                                    {/* Token Input */}
+                                    <div>
+                                        <label htmlFor="reset-token" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Token de Recuperación
+                                        </label>
+                                        <input
+                                            id="reset-token"
+                                            type="text"
+                                            placeholder="Ingresa el token recibido por correo"
+                                            className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
+                                            value={resetToken}
+                                            onChange={e => setResetToken(e.target.value)}
+                                        />
+                                    </div>
+
+                                    {/* New Password Input */}
+                                    <div>
+                                        <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Nueva Contraseña
+                                        </label>
+                                        <div className="relative rounded-lg shadow-sm">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <FaLock className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <input
+                                                id="new-password"
+                                                type="password"
+                                                placeholder="Mínimo 8 caracteres"
+                                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
+                                                value={newPassword}
+                                                onChange={e => setNewPassword(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Confirm Password Input */}
+                                    <div>
+                                        <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Confirmar Nueva Contraseña
+                                        </label>
+                                        <div className="relative rounded-lg shadow-sm">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <FaLock className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <input
+                                                id="confirm-password"
+                                                type="password"
+                                                placeholder="Confirma tu contraseña"
+                                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 placeholder-gray-400 text-gray-900"
+                                                value={confirmNewPassword}
+                                                onChange={e => setConfirmNewPassword(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Error Message */}
+                                    {error && (
+                                        <div className="p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
+                                            <p className="text-sm text-red-700">{error}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Submit Button */}
+                                    <button
+                                        type="button"
+                                        className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                        onClick={handleResetPassword}
+                                    >
+                                        Cambiar Contraseña
+                                    </button>
+                                </div>
+                            </div>
+                        </Transition>
+                    </div>
                 </div>
             </div>
         </section>

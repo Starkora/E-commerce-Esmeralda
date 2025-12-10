@@ -14,30 +14,15 @@ use Illuminate\Support\Str;
 class CartController extends Controller
 {
     /**
-     * Get or create cart for current user/session
+     * Get or create cart for current authenticated user
      */
     private function getOrCreateCart(Request $request)
     {
-        if (Auth::check()) {
-            // Usuario autenticado
-            $cart = Cart::firstOrCreate(
-                ['user_id' => Auth::id()],
-                ['subtotal' => 0, 'tax' => 0, 'total' => 0]
-            );
-        } else {
-            // Usuario anónimo - usar session_id del header
-            $sessionId = $request->header('X-Cart-Session');
-            
-            if (!$sessionId) {
-                // Si no hay session_id, crear uno nuevo
-                $sessionId = Str::uuid()->toString();
-            }
-            
-            $cart = Cart::firstOrCreate(
-                ['session_id' => $sessionId],
-                ['subtotal' => 0, 'tax' => 0, 'total' => 0]
-            );
-        }
+        // Solo usuarios autenticados (protegido por middleware auth:sanctum)
+        $cart = Cart::firstOrCreate(
+            ['user_id' => Auth::id()],
+            ['subtotal' => 0, 'tax' => 0, 'total' => 0]
+        );
         
         return $cart;
     }
@@ -55,7 +40,6 @@ class CartController extends Controller
                 'cart' => $cart,
                 'items' => $cart->items,
                 'total_items' => $cart->total_items,
-                'session_id' => $cart->session_id, // Enviar session_id al frontend
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -71,6 +55,10 @@ class CartController extends Controller
     public function addItem(Request $request)
     {
         try {
+            // Debug: Log usuario autenticado
+            Log::info('AddToCart - User ID: ' . Auth::id());
+            Log::info('AddToCart - Request data: ', $request->all());
+            
             $validated = $request->validate([
                 'product_id' => 'required|exists:products,id',
                 'quantity' => 'required|integer|min:1',
@@ -79,7 +67,10 @@ class CartController extends Controller
             ]);
 
             $cart = $this->getOrCreateCart($request);
+            Log::info('AddToCart - Cart ID: ' . $cart->id);
+            
             $product = Product::findOrFail($validated['product_id']);
+            Log::info('AddToCart - Product found: ' . $product->name);
 
             // Verificar que el producto tenga precio
             if (!$product->price) {

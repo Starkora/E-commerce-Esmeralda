@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Redirigir usuarios no autenticados a JSON response en API
+        $middleware->redirectGuestsTo(function ($request) {
+            return $request->expectsJson() ? null : route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

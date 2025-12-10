@@ -126,8 +126,8 @@ Route::prefix('stores')->group(function () {
     Route::get('/{id}', [StoreController::class, 'show']); // Get single store
 });
 
-// ===== Cart Routes =====
-Route::prefix('cart')->group(function () {
+// ===== Cart Routes (Requiere autenticación) =====
+Route::prefix('cart')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [CartController::class, 'index']); // Get cart
     Route::post('/items', [CartController::class, 'addItem']); // Add item to cart
     Route::put('/items/{id}', [CartController::class, 'updateItem']); // Update item quantity
